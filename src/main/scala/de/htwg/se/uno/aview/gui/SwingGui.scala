@@ -6,7 +6,6 @@ import scala.swing.BorderPanel.Position
 import scala.swing._
 import scala.swing.event.Key
 import scala.swing.Swing.LineBorder
-import de.htwg.se.uno.Uno.gui
 import javax.swing.JFrame
 
 class SwingGui(controller: ControllerInterface) extends Frame {

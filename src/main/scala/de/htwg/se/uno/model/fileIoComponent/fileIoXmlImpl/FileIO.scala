@@ -26,12 +26,12 @@ class FileIO extends FileIOInterface{
     }
 
     val activePlayer = (file \\ "game" \ "@activePlayer").text.toInt
-    while (activePlayer != game.getActivePlayer()) {
+    while (activePlayer != game.getActivePlayer) {
       game = game.setActivePlayer()
     }
 
     val direction = (file \\ "game" \ "@direction").text.toBoolean
-    if (direction != game.getDirection()) {
+    if (direction != game.getDirection) {
       game = game.setDirection()
     }
 
@@ -93,11 +93,11 @@ class FileIO extends FileIOInterface{
 
   def gameToXml(game: GameInterface): Node = {
     <game
-      numOfPlayers={ game.getNumOfPlayers().toString }
-      activePlayer={ game.getActivePlayer().toString }
-      direction={ game.getDirection().toString }
-      anotherPull={ game.getAnotherPull().toString }
-      specialTop={ game.getSpecialTop().toString }
+      numOfPlayers={ game.getNumOfPlayers.toString }
+      activePlayer={ game.getActivePlayer.toString }
+      direction={ game.getDirection.toString }
+      anotherPull={ game.getAnotherPull.toString }
+      specialTop={ game.getSpecialTop.toString }
     >
       <cardLists>
         {
