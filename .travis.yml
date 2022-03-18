@@ -1,0 +1,16 @@
+
+language: scala
+scala:
+  - 2.12.7
+
+services:
+  - xvfb
+
+env:
+  - DISPLAY=:99.0
+
+script:
+  - sbt clean coverage test coverageReport
+
+after_success:
+  - sbt coverageReport coveralls
