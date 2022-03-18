@@ -4,9 +4,10 @@ import com.google.inject.Inject
 import com.google.inject.name.Named
 import de.htwg.se.uno.model.gameComponent.GameInterface
 
+import scala.collection.mutable
 import scala.collection.mutable.{ListBuffer, Stack}
 
-case class Game @Inject() (@Named("DefaultPlayers") numOfPlayers:Int) extends GameInterface{
+case class Game @Inject() (@Named("DefaultPlayers") numOfPlayers: 2 | 3 | 4) extends GameInterface{
   var init = InitializeGameStrategy()
 
   init.initializeGame(numOfPlayers)
@@ -203,7 +204,7 @@ case class Game @Inject() (@Named("DefaultPlayers") numOfPlayers:Int) extends Ga
       "Uno"
     }
   }
-  def getNumOfPlayers() : Int = {
+  def getNumOfPlayers : 2 | 3 | 4 = {
     numOfPlayers
   }
 
@@ -286,11 +287,11 @@ case class Game @Inject() (@Named("DefaultPlayers") numOfPlayers:Int) extends Ga
     this
   }
 
-  def getActivePlayer() : Int = activePlayer
-  def getDirection() : Boolean = direction
-  def getAnotherPull() : Boolean = anotherPull
-  def getRedoVariable() : Boolean = redoVariable
-  def getUndoVariable() : Boolean = undoVariable
+  def getActivePlayer: Int = activePlayer
+  def getDirection: Boolean = direction
+  def getAnotherPull : Boolean = anotherPull
+  def getRedoVariable : Boolean = redoVariable
+  def getUndoVariable : Boolean = undoVariable
 
 
   def getAllCards(list: Int, index: Int) : String = {
@@ -341,7 +342,7 @@ case class Game @Inject() (@Named("DefaultPlayers") numOfPlayers:Int) extends Ga
     this
   }
 
-  def getSpecialTop() : Int = {
+  def getSpecialTop : Int = {
     special.top
   }
 
@@ -354,7 +355,7 @@ case class Game @Inject() (@Named("DefaultPlayers") numOfPlayers:Int) extends Ga
     unshuffled.push(init.cardsRevealed.drop(1))
     var cards = init.cardsCovered ++ init.cardsRevealed.drop(1)
     var n = cards.length
-    for (_ <- 0 to cards.length - 1) {
+    for (_ <- cards.indices) {
       val r = new scala.util.Random
       val p = 1 + r.nextInt(n)
       init.cardsCovered = cards(p - 1) +: init.cardsCovered

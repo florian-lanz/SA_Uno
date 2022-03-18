@@ -10,7 +10,7 @@ trait InitializeGameStrategy {
   var enemy2 = new Enemy
   var enemy3 = new Enemy
 
-  def initializeGame(numOfPlayers: Int): InitializeGameStrategy
+  def initializeGame(numOfPlayers: 2 | 3 | 4): InitializeGameStrategy
 }
 
 object InitializeGameStrategy {

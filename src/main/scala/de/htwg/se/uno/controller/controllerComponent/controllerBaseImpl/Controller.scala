@@ -70,16 +70,16 @@ class Controller @Inject() (var game: GameInterface) extends ControllerInterface
   }
   def get(): Unit = {
     if (game.nextTurn()) {
-      val b = game.getAnotherPull()
+      val b = game.getAnotherPull
       game = game.setActivePlayer()
-      val activePlayer = game.getActivePlayer()
+      val activePlayer = game.getActivePlayer
       undoManager.doStep(new PullCommand(this))
-      val activePlayer2 = game.getActivePlayer()
+      val activePlayer2 = game.getActivePlayer
       controllerEvent("enemyTurn")
       if (b) {
         game = game.setAnotherPull()
       }
-      if (game.getAnotherPull()) {
+      if (game.getAnotherPull) {
         game = game.setDirection()
         game = game.setActivePlayer()
         game = game.setDirection()
@@ -114,7 +114,7 @@ class Controller @Inject() (var game: GameInterface) extends ControllerInterface
     else
       controllerEvent("enemyTurn")
 
-    if game.getAnotherPull() then
+    if game.getAnotherPull then
       game.setDirection()
       game.setActivePlayer()
       game.setDirection()
@@ -127,14 +127,14 @@ class Controller @Inject() (var game: GameInterface) extends ControllerInterface
 
   def undo(): Unit = {
     undoManager.undoStep()
-    if (game.getUndoVariable()) {
+    if (game.getUndoVariable) {
       game.setDirection()
       game.setActivePlayer()
       game.setDirection()
     }
     while (!game.nextTurn()) {
       undoManager.undoStep()
-      if (game.getUndoVariable()) {
+      if (game.getUndoVariable) {
         game.setDirection()
         game.setActivePlayer()
         game.setDirection()
@@ -148,7 +148,7 @@ class Controller @Inject() (var game: GameInterface) extends ControllerInterface
     game = game.setRedoVariable()
     game.setActivePlayer()
     undoManager.redoStep
-    if (game.getRedoVariable()) {
+    if (game.getRedoVariable){
       game = game.setDirection()
       game = game.setActivePlayer()
       game = game.setDirection()
@@ -180,10 +180,10 @@ class Controller @Inject() (var game: GameInterface) extends ControllerInterface
     } else if(game.getLength(0) == 0) {
       controllerEvent("lost")
       publish(new GameEnded)
-    } else if (game.getNumOfPlayers() >= 3 &&game.getLength(1) == 0) {
+    } else if (game.getNumOfPlayers >= 3 &&game.getLength(1) == 0) {
       controllerEvent("lost")
       publish(new GameEnded)
-    } else if (game.getNumOfPlayers() >= 4 &&game.getLength(2) == 0) {
+    } else if (game.getNumOfPlayers >= 4 &&game.getLength(2) == 0) {
       controllerEvent("lost")
       publish(new GameEnded)
     } else {
@@ -205,7 +205,7 @@ class Controller @Inject() (var game: GameInterface) extends ControllerInterface
   def getCardText(list : Int, index : Int) : String = game.getCardText(list, index)
   def getGuiCardText(list : Int, index : Int) : String = game.getGuiCardText(list, index)
   def getLength(list : Int) : Int = game.getLength(list)
-  def getNumOfPlayers: Int = game.getNumOfPlayers()
+  def getNumOfPlayers: 2 | 3 | 4 = game.getNumOfPlayers
   def nextTurn() : Boolean = game.nextTurn()
   def getHs2: String = savedSpecialCard
   def nextEnemy() : Int = game.nextEnemy()
