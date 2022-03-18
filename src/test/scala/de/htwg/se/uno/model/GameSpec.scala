@@ -156,7 +156,7 @@ class GameSpec extends AnyWordSpec {
       }
 
       "Should be able to get the number of players" in {
-        newGame.getNumOfPlayers() should be(2)
+        newGame.getNumOfPlayers should be(2)
       }
 
       "Should be able to get the next Enemy" in {
@@ -229,20 +229,20 @@ class GameSpec extends AnyWordSpec {
 
       "Should be able to set the active Player" in {
         newGame = newGame.setActivePlayer()
-        newGame.getActivePlayer() should be(3)
+        newGame.getActivePlayer  should be(3)
       }
       "Should be able to set the active Player again" in {
         newGame = newGame.setActivePlayer()
-        newGame.getActivePlayer() should be(0)
+        newGame.getActivePlayer should be(0)
       }
 
       "Should be able to set the Direction" in {
         newGame = newGame.setDirection()
-        newGame.getDirection() should be (false)
+        newGame.getDirection should be (false)
       }
       "Should be able to set the Direction again" in {
         newGame = newGame.setDirection()
-        newGame.getDirection() should be (true)
+        newGame.getDirection should be (true)
       }
       "Should be able to set AnotherPull" in {
         newGame = newGame.setAnotherPull()
@@ -254,19 +254,19 @@ class GameSpec extends AnyWordSpec {
       }
 
       "Should be able to get the active Player" in {
-        newGame.getActivePlayer() should be(newGame.activePlayer)
+        newGame.getActivePlayer should be(newGame.activePlayer)
       }
       "Should be able to get the Direction" in {
-        newGame.getDirection() should be(true)
+        newGame.getDirection should be(true)
       }
       "Should be able to get Another Pull" in {
-        newGame.getAnotherPull() should be(newGame.anotherPull)
+        newGame.getAnotherPull should be(newGame.anotherPull)
       }
       "Should be able to get the help variable 1" in {
-        newGame.getRedoVariable() should be(newGame.redoVariable)
+        newGame.getRedoVariable should be(newGame.redoVariable)
       }
       "Should be able to get the help variable 2" in {
-        newGame.getUndoVariable() should be(newGame.undoVariable)
+        newGame.getUndoVariable should be(newGame.undoVariable)
       }
 
       "Should be able to get the string representation of all cards" in {
