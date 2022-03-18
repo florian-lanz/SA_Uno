@@ -17,9 +17,9 @@ class FileIOSpec @Inject() extends AnyWordSpec with Matchers {
       "Should be able to save and then load the game" in {
         fileIo.save(game)
         game.setActivePlayer()
-        game.getActivePlayer() should be(0)
+        game.getActivePlayer should be(0)
         game = fileIo.load
-        game.getActivePlayer() should be (3)
+        game.getActivePlayer should be (3)
       }
       "Should be able to save and then load the game again" in {
         game = injector.getInstance(Key.get(classOf[GameInterface], Names.named("2 Players")))
@@ -28,18 +28,18 @@ class FileIOSpec @Inject() extends AnyWordSpec with Matchers {
         game.setActivePlayer()
         fileIo.save(game)
         game.setActivePlayer()
-        game.getActivePlayer() should be(1)
+        game.getActivePlayer should be(1)
         game = fileIo.load
-        game.getActivePlayer() should be(0)
+        game.getActivePlayer should be(0)
       }
       "Should be able to save and then load the game a third time" in {
         game = injector.getInstance(Key.get(classOf[GameInterface], Names.named("3 Players")))
         game.createGame()
         fileIo.save(game)
         game.setDirection()
-        game.getDirection() should be(false)
+        game.getDirection should be(false)
         game = fileIo.load
-        game.getDirection() should be(true)
+        game.getDirection should be(true)
       }
     }
   }

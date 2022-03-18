@@ -14,15 +14,15 @@ class EnemyCommandSpec extends AnyWordSpec with Matchers {
       "Be able to do a Step" in {
         controller.game.setSpecialTop(-1)
         command.doStep
-        controller.game.getRedoVariable() should be(false)
+        controller.game.getRedoVariable should be(false)
       }
       "Be able to undo a Step" in {
         command.undoStep
-        controller.game.getUndoVariable() should be(true)
+        controller.game.getUndoVariable should be(true)
       }
       "Be able to redo a Step" in {
         command.redoStep
-        controller.game.getRedoVariable() should be(false)
+        controller.game.getRedoVariable should be(false)
       }
     }
   }
