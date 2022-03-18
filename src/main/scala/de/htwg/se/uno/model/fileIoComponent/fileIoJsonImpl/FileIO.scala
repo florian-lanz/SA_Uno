@@ -28,12 +28,12 @@ class FileIO extends  FileIOInterface{
     }
 
     val activePlayer = (json \ "game" \ "activePlayer").get.toString.toInt
-    while (activePlayer != game.getActivePlayer()) {
+    while (activePlayer != game.getActivePlayer) {
       game = game.setActivePlayer()
     }
 
     val direction = (json \ "game" \ "direction").get.toString.toBoolean
-    if (direction != game.getDirection()) {
+    if (direction != game.getDirection) {
       game = game.setDirection()
     }
 
@@ -72,11 +72,11 @@ class FileIO extends  FileIOInterface{
   def gameToJson(game: GameInterface): JsValue = {
     Json.obj(
       "game" -> Json.obj(
-        "numOfPlayers" -> JsNumber(game.getNumOfPlayers()),
-        "activePlayer" -> JsNumber(game.getActivePlayer()),
-        "direction" -> JsBoolean(game.getDirection()),
-        "anotherPull" -> JsBoolean(game.getAnotherPull()),
-        "specialTop" -> JsNumber(game.getSpecialTop()),
+        "numOfPlayers" -> JsNumber(game.getNumOfPlayers),
+        "activePlayer" -> JsNumber(game.getActivePlayer),
+        "direction" -> JsBoolean(game.getDirection),
+        "anotherPull" -> JsBoolean(game.getAnotherPull),
+        "specialTop" -> JsNumber(game.getSpecialTop),
         "cardLists" -> Json.toJson(
           for {
             listNumber <- 0 to 5
