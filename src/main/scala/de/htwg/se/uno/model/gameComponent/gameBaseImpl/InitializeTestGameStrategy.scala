@@ -3,7 +3,7 @@ package de.htwg.se.uno.model.gameComponent.gameBaseImpl
 import scala.collection.mutable.ListBuffer
 
 class InitializeTestGameStrategy extends InitializeGameStrategy {
-  override def initializeGame(numOfPlayers: Int): InitializeTestGameStrategy = {
+  override def initializeGame(numOfPlayers: 2 | 3 | 4): InitializeTestGameStrategy = {
     cardsCovered = new ListBuffer[Card]()
     cardsRevealed = new ListBuffer[Card]()
     enemy.enemyCards = new ListBuffer[Card]()
