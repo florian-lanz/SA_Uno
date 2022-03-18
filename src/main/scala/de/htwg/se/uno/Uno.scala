@@ -6,26 +6,23 @@ import de.htwg.se.uno.aview.gui.SwingGui
 import de.htwg.se.uno.controller.controllerComponent.{ControllerInterface, GameSizeChanged}
 import scala.io.StdIn.readLine
 
-object Uno {
+@main def main(): Unit = {
   val injector: Injector = Guice.createInjector(new UnoModule)
   val controller: ControllerInterface = injector.getInstance(classOf[ControllerInterface])
   val tui = new Tui(controller)
   val gui = new SwingGui(controller)
   controller.publish(new GameSizeChanged())
 
-  def main(args: Array[String]): Unit = {
-    var input: String = ""
+  println(controller.gameToString)
+  println(controller.controllerEvent("idle"))
 
-    println(controller.gameToString)
-    println(controller.controllerEvent("idle"))
+  gui.open()
 
-    gui.open()
-
+  var input: String = ""
+  input = readLine()
+  tui.processInputLine(input)
+  while (input != "q") {
     input = readLine()
-    val s = tui.processInputLine(input).get
-    while (input != "q") {
-      input = readLine()
-      val s = tui.processInputLine(input).get
-    }
+    tui.processInputLine(input)
   }
 }
