@@ -66,14 +66,14 @@ class Player() {
       game.init.cardsRevealed = myCard +: game.init.cardsRevealed
       handCards = handCards.take(handCards.length - 1)
     }
-    if (pushedCardsStack.top.value == Value.DirectionChange) {
+    if (card.value == Value.DirectionChange) {
       game.setDirection()
       game.special.push(0)
-    } else if (pushedCardsStack.top.value == Value.PlusTwo) {
+    } else if (card.value == Value.PlusTwo) {
       game.special.push(game.special.top + 2)
-    } else if (pushedCardsStack.top.value == Value.PlusFour) {
+    } else if (card.value == Value.PlusFour) {
       game.special.push(game.special.top + 4)
-    } else if (pushedCardsStack.top.value == Value.Suspend) {
+    } else if (card.value == Value.Suspend) {
       game.special.push(-1)
     } else {
       game.special.push(0)
@@ -82,23 +82,17 @@ class Player() {
     this
   }
   def pull(game: Game) : Player = {
-    pulledCardsStack.push(game.init.cardsCovered.head.toString)
-    pushedCardIndexStack.push(-1)
     handCards += Card(game.init.cardsCovered.head.color, game.init.cardsCovered.head.value)
     game.init.cardsCovered = game.init.cardsCovered.drop(1)
     if (game.special.top > 0) {
       game.anotherPull = false
-      anotherPullStack.push(false)
       for (_ <- 2 to game.special.top) {
-        pulledCardsStack.push(game.init.cardsCovered.head.toString)
-        pushedCardIndexStack.push(-1)
         handCards += Card(game.init.cardsCovered.head.color, game.init.cardsCovered.head.value)
         game.init.cardsCovered = game.init.cardsCovered.drop(1)
       }
     } else {
       game.anotherPull = true
       game.redoVariable = true
-      anotherPullStack.push(true)
     }
     game.special.push(0)
     this

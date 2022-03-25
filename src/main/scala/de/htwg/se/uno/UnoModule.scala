@@ -4,7 +4,7 @@ import com.google.inject.AbstractModule
 import com.google.inject.name.Names
 import de.htwg.se.uno.controller.controllerComponent._
 import de.htwg.se.uno.model.fileIoComponent.FileIOInterface
-import de.htwg.se.uno.model.fileIoComponent.fileIoXmlImpl.FileIO
+import de.htwg.se.uno.model.fileIoComponent._
 import de.htwg.se.uno.model.gameComponent.gameBaseImpl.Game
 import de.htwg.se.uno.model.gameComponent.GameInterface
 
@@ -20,7 +20,7 @@ class UnoModule extends AbstractModule {
     bind(classOf[GameInterface]).annotatedWith(Names.named("3 Players")).toInstance(new Game(3))
     bind(classOf[GameInterface]).annotatedWith(Names.named("4 Players")).toInstance(new Game(4))
 
-    //bind(classOf[FileIOInterface]).to(classOf[fileIoJsonImpl.FileIO])
-    bind(classOf[FileIOInterface]).to(classOf[FileIO])
+    bind(classOf[FileIOInterface]).to(classOf[fileIoJsonImpl.FileIO])
+    //bind(classOf[FileIOInterface]).to(classOf[fileIoXmlImpl.FileIO])
   }
 }

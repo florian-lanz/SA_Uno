@@ -24,38 +24,6 @@ class PlayerSpec extends AnyWordSpec {
         newGame.init.player.pullMove(newGame) should be(newGame.init.player)
       }
 
-      "Should be able to undo a Move" in {
-        newGame = newGame.createTestGame()
-        newGame.init.player.pulledCardsStack.push(" ")
-        newGame.init.player.pushedCardIndexStack.push(2)
-        newGame.init.player.pushedCardsStack.push(Card(Color.Blue, Value.DirectionChange))
-        newGame.special.push(0)
-        newGame.init.player.undo(newGame) should be(newGame.init.player)
-      }
-      "Should be able to undo a third move" in {
-        newGame = newGame.createTestGame()
-        newGame.init.player.pulledCardsStack.push("R 1")
-        newGame.init.player.pushedCardIndexStack.push(-1)
-        newGame.init.player.anotherPullStack.push(true)
-        newGame.special.push(0)
-        newGame.init.player.undo(newGame) should be(newGame.init.player)
-      }
-      "Should be able to undo a fourth move" in {
-        newGame = newGame.createTestGame()
-        newGame.init.player.pulledCardsStack.push("Start")
-        newGame.init.player.pushedCardIndexStack.push(-1)
-        newGame.init.player.anotherPullStack.push(true)
-        newGame.special.push(4)
-        newGame.special.push(0)
-        newGame.init.player.pulledCardsStack.push("R 1")
-        newGame.init.player.pushedCardIndexStack.push(-1)
-        newGame.init.player.pulledCardsStack.push("R S")
-        newGame.init.player.pushedCardIndexStack.push(-1)
-        newGame.init.player.pulledCardsStack.push("R+2")
-        newGame.init.player.pushedCardIndexStack.push(-1)
-        newGame.init.player.undo(newGame) should be(newGame.init.player)
-      }
-
       "Should check if a card is pushable" in {
         newGame = newGame.createTestGame()
         newGame.init.cardsRevealed = Card(Color.Red, Value.PlusTwo) +: newGame.init.cardsRevealed

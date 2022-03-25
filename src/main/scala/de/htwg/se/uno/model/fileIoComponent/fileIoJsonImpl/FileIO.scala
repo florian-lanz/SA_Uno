@@ -5,27 +5,24 @@ import com.google.inject.name.Names
 import de.htwg.se.uno.UnoModule
 import de.htwg.se.uno.model.gameComponent.gameBaseImpl
 import de.htwg.se.uno.model.fileIoComponent.FileIOInterface
-import de.htwg.se.uno.model.gameComponent.gameBaseImpl.{Card, Color, Value}
+import de.htwg.se.uno.model.gameComponent.gameBaseImpl.{Card, CardStack, Color, Value}
 import de.htwg.se.uno.model.gameComponent.GameInterface
-import de.htwg.se.uno.model.gameComponent.gameBaseImpl.Color
 import play.api.libs.json.*
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
-class FileIO extends  FileIOInterface{
-  override def load: GameInterface = {
-    var game: GameInterface = null
-    val source: String = Source.fromFile("game.json").getLines().mkString
+class FileIO extends FileIOInterface{
+  override def load(source: String = Source.fromFile("game.json").getLines().mkString): GameInterface = {
     val json: JsValue = Json.parse(source)
     val injector = Guice.createInjector(new UnoModule)
 
     val numOfPlayers = (json \ "game" \ "numOfPlayers").get.toString.toInt
-    numOfPlayers match {
-      case 2 => game = injector.getInstance(Key.get(classOf[GameInterface], Names.named("2 Players")))
-      case 3 => game = injector.getInstance(Key.get(classOf[GameInterface], Names.named("3 Players")))
-      case 4 => game = injector.getInstance(Key.get(classOf[GameInterface], Names.named("4 Players")))
+    var game: GameInterface = numOfPlayers match {
+      case 2 => injector.getInstance(Key.get(classOf[GameInterface], Names.named("2 Players")))
+      case 3 => injector.getInstance(Key.get(classOf[GameInterface], Names.named("3 Players")))
+      case 4 => injector.getInstance(Key.get(classOf[GameInterface], Names.named("4 Players")))
     }
 
     val activePlayer = (json \ "game" \ "activePlayer").get.toString.toInt
@@ -41,12 +38,7 @@ class FileIO extends  FileIOInterface{
     val anotherPull = (json \ "game" \ "anotherPull").get.toString.toBoolean
     game = game.setAnotherPull(anotherPull)
 
-    var cards = new ListBuffer[Card]()
-    for (color <- Color.values) {
-      for (value <- Value.values) {
-        cards += gameBaseImpl.Card(color, value)
-      }
-    }
+    val cards = CardStack().createCoveredCardStack(1, 1).cardStack
 
     game = game.clearAllLists()
 
@@ -78,19 +70,12 @@ class FileIO extends  FileIOInterface{
       recursionList(0, game)
     }
 
-    var i = 0
-    for (listNumber <- 0 to 5) {
-      val listLength = (json \\ "length")(listNumber).as[Int]
-      for (_ <- 0 until listLength) {
-        val card = (json \\ "card")(i).as[String]
-        for (i <- cards.indices) {
-          if (cards(i).toString.equals(card)) {
-            game = game.setAllCards(listNumber, cards(i))
-          }
-        }
-        i += 1
-      }
-    }
+    game = createCardLists("enemy1Cards", 0)
+    game = createCardLists("enemy2Cards", 1)
+    game = createCardLists("enemy3Cards", 2)
+    game = createCardLists("openCardStack", 3)
+    game = createCardLists("playerCards", 4)
+    game = createCardLists("coveredCardStack", 5)
 
     game
   }
@@ -102,25 +87,24 @@ class FileIO extends  FileIOInterface{
         "activePlayer" -> JsNumber(game.getActivePlayer),
         "direction" -> JsBoolean(game.getDirection),
         "anotherPull" -> JsBoolean(game.getAnotherPull),
-        "specialTop" -> JsNumber(game.getSpecialTop),
-        "cardLists" -> Json.toJson(
-          for {
-            listNumber <- 0 to 5
-            cardNumber <- 0 until game.getLength(listNumber)
-          } yield {
-            Json.obj(
-              "card" -> JsString(game.getAllCards(listNumber, cardNumber))
-            )
-          }
+        "specialCard" -> JsNumber(game.getSpecialTop),
+        "enemy1Cards" -> JsArray(
+          for cardNumber <- 0 until game.getLength(0) yield JsString(game.getAllCards(0, cardNumber))
         ),
-        "listLengths" -> Json.toJson(
-          for {
-            i <- 0 to 5
-          } yield {
-            Json.obj(
-            "length" -> JsNumber(game.getLength(i))
-            )
-          }
+        "enemy2Cards" -> JsArray(
+          for cardNumber <- 0 until game.getLength(1) yield JsString(game.getAllCards(1, cardNumber))
+        ),
+        "enemy3Cards" -> JsArray(
+          for cardNumber <- 0 until game.getLength(2) yield JsString(game.getAllCards(2, cardNumber))
+        ),
+        "openCardStack" -> JsArray(
+          for cardNumber <- 0 until game.getLength(3) yield JsString(game.getAllCards(3, cardNumber))
+        ),
+        "playerCards" -> JsArray(
+          for cardNumber <- 0 until game.getLength(4) yield JsString(game.getAllCards(4, cardNumber))
+        ),
+        "coveredCardStack" -> JsArray(
+          for cardNumber <- 0 until game.getLength(5) yield JsString(game.getAllCards(5, cardNumber))
         )
       )
     )

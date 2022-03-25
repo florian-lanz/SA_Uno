@@ -247,9 +247,6 @@ class GameSpec extends AnyWordSpec {
       "Should be able to get the help variable 1" in {
         newGame.getRedoVariable should be(newGame.redoVariable)
       }
-      "Should be able to get the help variable 2" in {
-        newGame.getUndoVariable should be(newGame.undoVariable)
-      }
 
       "Should be able to get the string representation of all cards" in {
         newGame = newGame.createTestGame()

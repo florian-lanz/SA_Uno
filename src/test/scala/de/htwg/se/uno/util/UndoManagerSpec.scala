@@ -21,18 +21,16 @@ class UndoManagerSpec extends AnyWordSpec {
         controller.game.getActivePlayer should be(3)
       }
       "be able to do a Step" in {
-        controller.game.setSpecialTop(-1)
         undoManager.doStep(command)
-        controller.game.getActivePlayer should be(0)
+        controller.game.getLength(4) should be(10)
       }
       "be able to undo a Step" in {
-        controller.game.setAnotherPull(true)
         undoManager.undoStep()
-        controller.game.getAnotherPull should be(false)
+        controller.game.getLength(4) should be(9)
       }
       "be able to redo a Step" in {
         undoManager.redoStep
-        controller.game.getActivePlayer should be (1)
+        controller.game.getLength(4) should be(10)
       }
     }
   }

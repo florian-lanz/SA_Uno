@@ -12,18 +12,16 @@ class PushCommandSpec extends AnyWordSpec with Matchers {
       controller.createTestGame()
       val command = new PushCommand(controller.getCardText(4,2), 0, controller)
       "Be able to do a Step" in {
-        controller.game.setSpecialTop(-1)
         command.doStep
-        controller.game.getActivePlayer should be(0)
+        controller.game.getLength(4) should be (8)
       }
       "Be able to undo a Step" in {
-        controller.game.setAnotherPull(true)
         command.undoStep
-        controller.game.getAnotherPull should be (false)
+        controller.game.getLength(4) should be (9)
       }
       "Be able to redo a Step" in {
         command.redoStep
-        controller.game.getActivePlayer should be (1)
+        controller.game.getLength(4) should be (8)
       }
     }
   }

@@ -16,10 +16,6 @@ class EnemyCommand3Spec extends AnyWordSpec with Matchers {
         command.doStep
         controller.game.getRedoVariable should be(false)
       }
-      "Be able to undo a Step" in {
-        command.undoStep
-        controller.game.getUndoVariable should be(true)
-      }
       "Be able to redo a Step" in {
         command.redoStep
         controller.game.getRedoVariable should be(false)

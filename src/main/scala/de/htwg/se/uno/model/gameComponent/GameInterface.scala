@@ -13,8 +13,6 @@ trait GameInterface {
   def getGuiCardText(list: Int, index: Int): String
   def getNumOfPlayers: 2 | 3 | 4
   def createGame(): Game
-  def enemyUndo2(): Game
-  def enemyUndo3(): Game
   def enemy2(): Game
   def enemy3(): Game
   def nextTurn(): Boolean

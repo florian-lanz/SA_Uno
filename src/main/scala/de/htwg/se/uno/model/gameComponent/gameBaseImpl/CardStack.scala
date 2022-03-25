@@ -3,8 +3,8 @@ package de.htwg.se.uno.model.gameComponent.gameBaseImpl
 import scala.annotation.tailrec
 import scala.util.Random
 
-case class CardStack(cardStack: List[Card]):
-  def createCoveredCardStack(): CardStack =
+case class CardStack(cardStack: List[Card] = List()):
+  def createCoveredCardStack(amountColorCards: Int = 2, amountSpecialCards: Int = 4): CardStack =
     @tailrec
     def cardStackRecursion(cardStack: List[Card], index: Int): List[Card] =
       val value = Value.fromOrdinal(index)

@@ -15,7 +15,7 @@ class UndoManager {
         head.undoStep
         undoStack=stack
         redoStack= head::redoStack
-      }
+        true
     }
   }
   def redoStep = {

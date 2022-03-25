@@ -91,6 +91,8 @@ class FileIO extends FileIOInterface{
     pw.write(xml)
     pw.close()
   }
+  
+  override def gameToJson(game: GameInterface): JsValue = Json.obj()
 
   def gameToXml(game: GameInterface): Node = {
     <game

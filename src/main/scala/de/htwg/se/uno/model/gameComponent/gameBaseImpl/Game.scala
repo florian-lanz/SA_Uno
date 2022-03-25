@@ -105,29 +105,6 @@ case class Game @Inject() (@Named("DefaultPlayers") numOfPlayers: 2 | 3 | 4) ext
     this
   }
 
-  def enemyUndo() : Game = {
-    init.enemy = init.enemy.undo(this)
-    this
-  }
-  def enemyUndo2() : Game = {
-    init.enemy2 = init.enemy2.undo(this)
-    this
-  }
-  def enemyUndo3() : Game = {
-    init.enemy3 = init.enemy3.undo(this)
-    this
-  }
-  def playerUndo() : Game = {
-    val s = this.toString
-    init.player = init.player.undo(this)
-    if (s.equals(this.toString)) {
-      anotherPull = true
-      if (special.top == -1)
-        anotherPull = false
-    }
-    this
-  }
-
   def setLength(i : Integer) : Unit = {
     this.lengthForTests = i
   }

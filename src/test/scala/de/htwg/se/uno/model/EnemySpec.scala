@@ -92,54 +92,14 @@ class EnemySpec extends AnyWordSpec {
         newGame.activePlayer = 1
         newGame.init.enemy.enemy(newGame) should be (newGame.init.enemy)
       }
-      "Be able to do the enemy's run a fourteenth time" in{
+      "Be able to do the enemy's run a fourteenth time" in {
         newGame = newGame.createTestGame()
         newGame.init.cardsRevealed = Card(Color.Blue, Value.Five) +: newGame.init.cardsRevealed
         newGame.init.enemy.enemyCards = newGame.init.enemy.enemyCards.drop(7)
         newGame.activePlayer = 1
         newGame.anotherPull = true
-        newGame.init.enemy.enemy(newGame) should be (newGame.init.enemy)
+        newGame.init.enemy.enemy(newGame) should be(newGame.init.enemy)
       }
-
-      "Be able to undo a move" in {
-        newGame = newGame.createTestGame()
-        newGame.init.enemy.pulledCardsStack.push(" ")
-        newGame.init.enemy.pushedCardIndexStack.push(2)
-        newGame.init.enemy.pushedCardsStack.push(Card(Color.Blue, Value.DirectionChange))
-        newGame.special.push(0)
-        newGame.init.enemy.undo(newGame) should be(newGame.init.enemy)
-      }
-      "Be able to undo a second move" in {
-        newGame = newGame.createTestGame()
-        newGame.init.enemy.pulledCardsStack.push("Start")
-        newGame.init.enemy.pushedCardIndexStack.push(-1)
-        newGame.special.push(0)
-        newGame.init.enemy.undo(newGame) should be(newGame.init.enemy)
-      }
-      "Be able to undo a third move" in {
-        newGame = newGame.createTestGame()
-        newGame.init.enemy.pulledCardsStack.push("R 1")
-        newGame.init.enemy.pushedCardIndexStack.push(-1)
-        newGame.init.enemy.anotherPullStack.push(true)
-        newGame.special.push(0)
-        newGame.init.enemy.undo(newGame) should be(newGame.init.enemy)
-      }
-      "Be able to undo a fourth move" in {
-        newGame = newGame.createTestGame()
-        newGame.init.enemy.pulledCardsStack.push("Start")
-        newGame.init.enemy.pushedCardIndexStack.push(-1)
-        newGame.init.enemy.anotherPullStack.push(true)
-        newGame.special.push(4)
-        newGame.special.push(0)
-        newGame.init.enemy.pulledCardsStack.push("R 1")
-        newGame.init.enemy.pushedCardIndexStack.push(-1)
-        newGame.init.enemy.pulledCardsStack.push("R S")
-        newGame.init.enemy.pushedCardIndexStack.push(-1)
-        newGame.init.enemy.pulledCardsStack.push("R+2")
-        newGame.init.enemy.pushedCardIndexStack.push(-1)
-        newGame.init.enemy.undo(newGame) should be(newGame.init.enemy)
-      }
-
 
       "Be able to push a Card of the Enemy's Cards" in {
         newGame = newGame.createTestGame()

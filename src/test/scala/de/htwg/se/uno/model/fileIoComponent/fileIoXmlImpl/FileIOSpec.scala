@@ -18,7 +18,7 @@ class FileIOSpec @Inject() extends AnyWordSpec with Matchers {
         fileIo.save(game)
         game.setActivePlayer()
         game.getActivePlayer should be(0)
-        game = fileIo.load
+        game = fileIo.load()
         game.getActivePlayer should be (3)
       }
       "Should be able to save and then load the game again" in {
@@ -29,7 +29,7 @@ class FileIOSpec @Inject() extends AnyWordSpec with Matchers {
         fileIo.save(game)
         game.setActivePlayer()
         game.getActivePlayer should be(1)
-        game = fileIo.load
+        game = fileIo.load()
         game.getActivePlayer should be(0)
       }
       "Should be able to save and then load the game a third time" in {
@@ -38,7 +38,7 @@ class FileIOSpec @Inject() extends AnyWordSpec with Matchers {
         fileIo.save(game)
         game.setDirection()
         game.getDirection should be(false)
-        game = fileIo.load
+        game = fileIo.load()
         game.getDirection should be(true)
       }
     }
