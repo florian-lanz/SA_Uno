@@ -5,11 +5,6 @@ import scala.swing.Color
 
 class Enemy() {
   var enemyCards = new ListBuffer[Card]()
-  var pulledCardsStack = Stack[String]("Start")
-  var pushedCardIndexStack = Stack[Integer](-1)
-  var pushedCardsStack = Stack[Card]()
-  var anotherPullStack = Stack[Boolean]()
-
 
   def enemy(game: Game) : Enemy = {
     val s = game.toString
@@ -77,8 +72,6 @@ class Enemy() {
     }
     game.anotherPull = false
     game.special.push(0)
-    pulledCardsStack.push("Suspend")
-    pushedCardIndexStack.push(-1)
     this
   }
 
@@ -210,30 +203,25 @@ class Enemy() {
       }
     }
     c = 0
-    pushedCardsStack.push(card)
     for (i <- 2 to enemyCards.length) {
       if (enemyCards(i - 2).color == card.color && enemyCards(i - 2).value == card.value && c == 0) {
         game.init.cardsRevealed = myCard +: game.init.cardsRevealed
         enemyCards = enemyCards.take(i - 2) ++ enemyCards.drop(i-1)
         c += 1
-        pushedCardIndexStack.push(i-2)
-        pulledCardsStack.push(" ")
       }
     }
     if (c == 0) {
       game.init.cardsRevealed = myCard +: game.init.cardsRevealed
       enemyCards = enemyCards.take(enemyCards.length - 1)
-      pushedCardIndexStack.push(enemyCards.length - 1)
-      pulledCardsStack.push(" ")
     }
-    if (pushedCardsStack.top.value == Value.DirectionChange) {
+    if (card.value == Value.DirectionChange) {
       game.setDirection()
       game.special.push(0)
-    } else if (pushedCardsStack.top.value == Value.PlusTwo) {
+    } else if (card.value == Value.PlusTwo) {
       game.special.push(game.special.top + 2)
-    } else if (pushedCardsStack.top.value == Value.PlusFour) {
+    } else if (card.value == Value.PlusFour) {
       game.special.push(game.special.top + 4)
-    } else if (pushedCardsStack.top.value == Value.Suspend) {
+    } else if (card.value == Value.Suspend) {
       game.special.push(-1)
     } else {
       game.special.push(0)

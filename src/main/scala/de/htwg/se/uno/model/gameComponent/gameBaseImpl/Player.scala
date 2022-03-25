@@ -4,10 +4,6 @@ import scala.collection.mutable.{ListBuffer, Stack}
 
 class Player() {
   var handCards = new ListBuffer[Card]()
-  var pulledCardsStack = Stack[String]("Start")
-  var pushedCardIndexStack = Stack[Integer](-1)
-  var pushedCardsStack = Stack[Card]()
-  var anotherPullStack = Stack[Boolean]()
 
   def pushMove(string:String, color : Int, game: Game) : Player = {
     if(equalsCard(string)) {
@@ -24,73 +20,8 @@ class Player() {
     } else {
       game.anotherPull = false
       game.special.push(0)
-      pulledCardsStack.push("Suspend")
-      pushedCardIndexStack.push(-1)
-      anotherPullStack.push(false)
       this
     }
-  }
-
-  def undo(game: Game) : Player = {
-    if (pulledCardsStack.top.equals(" ")) { //Wenn gelegt wurde
-      handCards = handCards.take(pushedCardIndexStack.top) :+ pushedCardsStack.top :++ handCards.drop(pushedCardIndexStack.top)
-      game.init.cardsRevealed = game.init.cardsRevealed.drop(1)
-      if (pushedCardsStack.top.value == Value.DirectionChange) {
-        game.setDirection()
-      }
-      pulledCardsStack.pop()
-      pushedCardIndexStack.pop()
-      pushedCardsStack.pop()
-      game.special.pop()
-      game.undoVariable = true
-    } else {
-      var c = 0
-      if (equalsCard(pulledCardsStack.top)) {
-        val card = getCard(pulledCardsStack.top)
-        game.init.cardsCovered = card +: game.init.cardsCovered
-        c = 0
-        for (i <- 2 to handCards.length) {
-          if (handCards(i - 2).color == card.color && handCards(i - 2).value == card.value && c == 0) {
-            handCards = handCards.take(i - 2) ++ handCards.drop(i - 1)
-            c = 1
-          }
-        }
-        if (c == 0) {
-          handCards = handCards.take(handCards.length - 1)
-        }
-      }
-      pulledCardsStack.pop()
-      pushedCardIndexStack.pop()
-      game.undoVariable = true
-      if(anotherPullStack.top) {
-        game.undoVariable = false
-        game.anotherPull = false
-      }
-      anotherPullStack.pop()
-
-      game.special.pop()
-      if (game.special.top > 0) {
-        for (_ <- 2 to game.special.top) {
-          if (equalsCard(pulledCardsStack.top)) {
-            val card = getCard(pulledCardsStack.top)
-            game.init.cardsCovered = card +: game.init.cardsCovered
-            c = 0
-            for (i <- 2 to handCards.length) {
-              if (handCards(i - 2).color == card.color && handCards(i - 2).value == card.value && c == 0) {
-                handCards = handCards.take(i - 2) ++ handCards.drop(i - 1)
-                c = 1
-              }
-            }
-            if (c == 0) {
-              handCards = handCards.take(handCards.length - 1)
-            }
-            pulledCardsStack.pop()
-            pushedCardIndexStack.pop()
-          }
-        }
-      }
-    }
-    this
   }
 
   def pushable(card: Card, game: Game) : Boolean = {
@@ -124,21 +55,16 @@ class Player() {
     } else if (color == 4) {
       myCard = Card(Color.Red, card.value)
     }
-    pushedCardsStack.push(card)
     for (i <- 2 to handCards.length) {
       if (handCards(i - 2).color == card.color && handCards(i - 2).value == card.value && c == 0) {
         game.init.cardsRevealed = myCard +: game.init.cardsRevealed
         handCards = handCards.take(i - 2) ++ handCards.drop(i-1)
-        pushedCardIndexStack.push(i-2)
         c += 1
-        pulledCardsStack.push(" ")
       }
     }
     if (c == 0) {
       game.init.cardsRevealed = myCard +: game.init.cardsRevealed
       handCards = handCards.take(handCards.length - 1)
-      pushedCardIndexStack.push(handCards.length-1)
-      pulledCardsStack.push(" ")
     }
     if (pushedCardsStack.top.value == Value.DirectionChange) {
       game.setDirection()

@@ -16,6 +16,7 @@ class Controller @Inject() (var game: GameInterface) extends ControllerInterface
   val fileIo: FileIOInterface = injector.getInstance(classOf[FileIOInterface])
   private var controllerEventString = "Du bist dran. Mögliche Befehle: q, n, t, s [Karte], g, u, r"
   private var savedSpecialCard = ""
+  var undoList: List[String] = List()
 
   def createGame(size: Int):Unit = {
     size match {
@@ -126,20 +127,14 @@ class Controller @Inject() (var game: GameInterface) extends ControllerInterface
   }
 
   def undo(): Unit = {
+    var undo = true
     undoManager.undoStep()
-    if (game.getUndoVariable) {
+    while (!game.nextTurn() && undo) do
+      undo = undoManager.undoStep()
+    while !game.nextTurn() do
       game.setDirection()
       game.setActivePlayer()
       game.setDirection()
-    }
-    while (!game.nextTurn()) {
-      undoManager.undoStep()
-      if (game.getUndoVariable) {
-        game.setDirection()
-        game.setActivePlayer()
-        game.setDirection()
-      }
-    }
     controllerEvent("undo")
     publish(new GameChanged)
     won()
@@ -166,7 +161,7 @@ class Controller @Inject() (var game: GameInterface) extends ControllerInterface
   }
 
   def load(): Unit = {
-    game = fileIo.load
+    game = fileIo.load()
     savedSpecialCard = ""
     undoManager = new UndoManager
     controllerEvent("load")

@@ -9,10 +9,10 @@ case class CardStack(cardStack: List[Card]):
     def cardStackRecursion(cardStack: List[Card], index: Int): List[Card] =
       val value = Value.fromOrdinal(index)
       val newCardStack = if value == Value.PlusFour || value == Value.ColorChange then
-        cardStack ::: List.fill(4)(Card(Color.Special, value))
+        cardStack ::: List.fill(amountSpecialCards)(Card(Color.Special, value))
       else
-        cardStack ::: List.fill(2)(List(Card(Color.Red, value), Card(Color.Blue, value), Card(Color.Green, value),
-          Card(Color.Yellow, value))).flatten
+        cardStack ::: List.fill(amountColorCards)(List(Card(Color.Red, value), Card(Color.Blue, value), 
+          Card(Color.Green, value), Card(Color.Yellow, value))).flatten
       if index < Value.values.length - 1 then
         cardStackRecursion(newCardStack, index + 1)
       else

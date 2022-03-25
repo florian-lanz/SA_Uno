@@ -1,5 +1,6 @@
 package de.htwg.se.uno.model.gameComponent.gameBaseImpl
 
+import com.fasterxml.jackson.annotation.JsonValue
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import de.htwg.se.uno.model.gameComponent.GameInterface
@@ -17,7 +18,6 @@ case class Game @Inject() (@Named("DefaultPlayers") numOfPlayers: 2 | 3 | 4) ext
   var anotherPull = false
   var special = Stack[Integer](0)
   var redoVariable = false
-  var undoVariable = false
   private var lengthForTests = 0
   private var shuffled = Stack[ListBuffer[Card]]()
   private var unshuffled = Stack[ListBuffer[Card]]()
@@ -35,7 +35,6 @@ case class Game @Inject() (@Named("DefaultPlayers") numOfPlayers: 2 | 3 | 4) ext
     unshuffled.popAll()
     reshuffled.popAll()
     redoVariable = false
-    undoVariable = false
     this
   }
   def createTestGame() : Game = {
@@ -50,7 +49,6 @@ case class Game @Inject() (@Named("DefaultPlayers") numOfPlayers: 2 | 3 | 4) ext
     unshuffled.popAll()
     reshuffled.popAll()
     redoVariable = false
-    undoVariable = false
     this
   }
 
@@ -60,9 +58,6 @@ case class Game @Inject() (@Named("DefaultPlayers") numOfPlayers: 2 | 3 | 4) ext
       init.player = init.player.pushMove(string, color, this)
     } else if (special.top == -1) {
       special.push(0)
-      init.player.pulledCardsStack.push("Suspend")
-      init.player.pushedCardIndexStack.push(-1)
-      init.player.anotherPullStack.push(false)
       redoVariable = true
       setActivePlayer()
     }
@@ -74,9 +69,6 @@ case class Game @Inject() (@Named("DefaultPlayers") numOfPlayers: 2 | 3 | 4) ext
       init.player = init.player.pullMove(this)
     } else if (special.top == -1) {
       special.push(0)
-      init.player.pulledCardsStack.push("Suspend")
-      init.player.pushedCardIndexStack.push(-1)
-      init.player.anotherPullStack.push(false)
       redoVariable = true
       setActivePlayer()
     }
@@ -88,8 +80,6 @@ case class Game @Inject() (@Named("DefaultPlayers") numOfPlayers: 2 | 3 | 4) ext
       init.enemy = init.enemy.enemy(this)
     } else if (special.top == -1) {
       special.push(0)
-      init.enemy.pulledCardsStack.push("Suspend")
-      init.enemy.pushedCardIndexStack.push(-1)
       redoVariable = false
     }
     this
@@ -100,8 +90,6 @@ case class Game @Inject() (@Named("DefaultPlayers") numOfPlayers: 2 | 3 | 4) ext
       init.enemy2 = init.enemy2.enemy(this)
     } else if (special.top == -1) {
       special.push(0)
-      init.enemy2.pulledCardsStack.push("Suspend")
-      init.enemy2.pushedCardIndexStack.push(-1)
       redoVariable = false
     }
     this
@@ -112,8 +100,6 @@ case class Game @Inject() (@Named("DefaultPlayers") numOfPlayers: 2 | 3 | 4) ext
       init.enemy3 = init.enemy3.enemy(this)
     } else if (special.top == -1) {
       special.push(0)
-      init.enemy3.pulledCardsStack.push("Suspend")
-      init.enemy3.pushedCardIndexStack.push(-1)
       redoVariable = false
     }
     this
@@ -291,7 +277,6 @@ case class Game @Inject() (@Named("DefaultPlayers") numOfPlayers: 2 | 3 | 4) ext
   def getDirection: Boolean = direction
   def getAnotherPull : Boolean = anotherPull
   def getRedoVariable : Boolean = redoVariable
-  def getUndoVariable : Boolean = undoVariable
 
 
   def getAllCards(list: Int, index: Int) : String = {
@@ -338,7 +323,6 @@ case class Game @Inject() (@Named("DefaultPlayers") numOfPlayers: 2 | 3 | 4) ext
     unshuffled.popAll()
     reshuffled.popAll()
     redoVariable = false
-    undoVariable = false
     this
   }
 
@@ -364,24 +348,6 @@ case class Game @Inject() (@Named("DefaultPlayers") numOfPlayers: 2 | 3 | 4) ext
     }
     init.cardsRevealed = init.cardsRevealed.take(1)
     shuffled.push(init.cardsCovered)
-    this
-  }
-
-  def unshuffle() : Game = {
-    init.cardsRevealed = init.cardsRevealed(init.cardsRevealed.length - 1) +: unshuffled.top
-    unshuffled.pop()
-    reshuffled.push(init.cardsCovered)
-    init.cardsCovered = shuffled.top
-    shuffled.pop()
-    this
-  }
-
-  def reshuffle() : Game = {
-    shuffled.push(init.cardsCovered)
-    unshuffled.push(init.cardsRevealed.drop(1))
-    init.cardsCovered = reshuffled.top
-    reshuffled.pop()
-    init.cardsRevealed = init.cardsRevealed.take(1)
     this
   }
 

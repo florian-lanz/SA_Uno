@@ -10,6 +10,7 @@ import de.htwg.se.uno.model.gameComponent.GameInterface
 import de.htwg.se.uno.model.gameComponent.gameBaseImpl.Color
 import play.api.libs.json.*
 
+import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
@@ -49,8 +50,33 @@ class FileIO extends  FileIOInterface{
 
     game = game.clearAllLists()
 
-    val specialTop = (json \ "game" \ "specialTop").get.toString.toInt
+    val specialTop = (json \ "game" \ "specialCard").get.toString.toInt
     game = game.setSpecialTop(specialTop)
+
+    def createCardLists(listName: String, listIndex: Int): GameInterface = {
+      val list = (json \ "game" \ listName).as[List[String]]
+
+      @tailrec
+      def recursionList(i: Int, game: GameInterface): GameInterface = {
+        if i < list.length then
+          val newGame = recursionCards(0, list(i), game)
+          recursionList(i + 1, newGame)
+        else
+          game
+      }
+
+      @tailrec
+      def recursionCards(j: Int, card: String, game: GameInterface): GameInterface = {
+        if j < cards.length && cards(j).toString.equals(card) then
+          game.setAllCards(listIndex, cards(j))
+        else if j < cards.length then
+          recursionCards(j + 1, card, game)
+        else
+          game
+      }
+
+      recursionList(0, game)
+    }
 
     var i = 0
     for (listNumber <- 0 to 5) {

@@ -100,8 +100,16 @@ class TuiSpec extends AnyWordSpec with Matchers {
     }
     "Redo a Step on Input 'r' if possible" in {
       val old = controller.gameToString
-      tui.processInputLine("r")
+      tui.processInputLine("g")
       controller.gameToString should not be old
+
+
+      tui.processInputLine("u")
+      controller.nextTurn() should be(true)
+
+      val old2 = controller.gameToString
+      tui.processInputLine("r")
+      controller.gameToString should not be old2
     }
     "Save but not change anything on input 'sv'" in {
       val old = controller.gameToString

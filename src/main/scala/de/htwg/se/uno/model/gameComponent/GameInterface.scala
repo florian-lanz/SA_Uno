@@ -6,9 +6,7 @@ trait GameInterface {
   def toString: String
   def createTestGame(): Game
   def enemy(): Game
-  def enemyUndo(): Game
   def pullMove(): Game
-  def playerUndo(): Game
   def pushMove(string: String, color: Int): Game
   def getLength(list: Integer): Int
   def getCardText(list: Int, index: Int): String
@@ -29,7 +27,6 @@ trait GameInterface {
   def setAnotherPull(b: Boolean = false): Game
   def getRedoVariable: Boolean
   def setRedoVariable(b: Boolean = true): Game
-  def getUndoVariable: Boolean
   def setLength(i: Integer): Unit
   def getAllCards(list: Int, index: Int): String
   def setAllCards(list: Int, card: Card): Game
@@ -37,6 +34,4 @@ trait GameInterface {
   def getSpecialTop: Int
   def setSpecialTop(io: Int): Game
   def shuffle(): Game
-  def unshuffle(): Game
-  def reshuffle(): Game
 }

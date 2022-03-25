@@ -23,7 +23,7 @@ class PullCommandSpec extends AnyWordSpec with Matchers {
       }
       "Be able to redo a Step" in {
         command.redoStep
-        controller.game.getActivePlayer should be (1)
+        controller.game.getLength(4) should be (10)
       }
     }
   }

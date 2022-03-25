@@ -61,24 +61,6 @@ class GameSpec extends AnyWordSpec {
         newGame = newGame.enemy3()
         newGame.getLength(2) should be(8)
       }
-      "Should be able to undo the enemy's move" in {
-        newGame = newGame.enemyUndo()
-        newGame.getLength(0) should be(8)
-      }
-      "Should be able to undo the enemy2's move" in {
-        newGame = newGame.enemyUndo2()
-        newGame.getLength(1) should be(8)
-      }
-      "Should be able to undo the enemy3's move" in {
-        newGame = newGame.enemyUndo3()
-        newGame.getLength(2) should be(8)
-      }
-      "Should be able to undo the player's move" in {
-        newGame.special.push(-1)
-        newGame.special.push(-1)
-        newGame = newGame.playerUndo()
-        newGame.getLength(4) should be(9)
-      }
 
       "Should be able to set the Length" in {
         newGame.setLength(1)
@@ -322,14 +304,6 @@ class GameSpec extends AnyWordSpec {
       "Should be able to shuffle the covered Cards" in {
         newGame = newGame.createTestGame()
         newGame.shuffle()
-        newGame.init.cardsRevealed.length should be(1)
-      }
-      "Should be able to undo the shuffle of the covered cards" in {
-        newGame.unshuffle()
-        newGame.init.cardsRevealed.length should be(1)
-      }
-      "Should be able to redo the shuffle of the covered cards" in {
-        newGame.reshuffle()
         newGame.init.cardsRevealed.length should be(1)
       }
 

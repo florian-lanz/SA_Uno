@@ -114,31 +114,6 @@ class InitializeTestGameStrategy extends InitializeGameStrategy {
     enemy3.enemyCards = enemy3.enemyCards :+ cardsCovered(25)
     cardsCovered = cardsCovered.take(25) ++ cardsCovered.drop(26)
 
-    player.pulledCardsStack.popAll()
-    player.pulledCardsStack.push("Start")
-    player.pushedCardIndexStack.popAll()
-    player.pushedCardIndexStack.push(-1)
-    player.pushedCardsStack.popAll()
-    player.anotherPullStack.popAll()
-    enemy.pulledCardsStack.popAll()
-    enemy.pulledCardsStack.push("Start")
-    enemy.pushedCardIndexStack.popAll()
-    enemy.pushedCardIndexStack.push(-1)
-    enemy.pushedCardsStack.popAll()
-    enemy.anotherPullStack.popAll()
-    enemy2.pulledCardsStack.popAll()
-    enemy2.pulledCardsStack.push("Start")
-    enemy2.pushedCardIndexStack.popAll()
-    enemy2.pushedCardIndexStack.push(-1)
-    enemy2.pushedCardsStack.popAll()
-    enemy2.anotherPullStack.popAll()
-    enemy3.pulledCardsStack.popAll()
-    enemy3.pulledCardsStack.push("Start")
-    enemy3.pushedCardIndexStack.popAll()
-    enemy3.pushedCardIndexStack.push(-1)
-    enemy3.pushedCardsStack.popAll()
-    enemy3.anotherPullStack.popAll()
-
     this
   }
 }

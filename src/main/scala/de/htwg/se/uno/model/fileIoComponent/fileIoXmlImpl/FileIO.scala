@@ -8,14 +8,15 @@ import de.htwg.se.uno.model.fileIoComponent.FileIOInterface
 import de.htwg.se.uno.model.gameComponent.gameBaseImpl.{Card, Color, Value}
 import de.htwg.se.uno.model.gameComponent.GameInterface
 import de.htwg.se.uno.model.gameComponent.gameBaseImpl.Color
+import play.api.libs.json.{JsValue, Json}
 
 import scala.collection.mutable.ListBuffer
 import scala.xml.{Node, PrettyPrinter}
 
 class FileIO extends FileIOInterface{
-  override def load: GameInterface = {
+  override def load(source: String = "game.xml"): GameInterface = {
     var game: GameInterface = null
-    val file = scala.xml.XML.loadFile("game.xml")
+    val file = scala.xml.XML.loadFile(source)
     val injector = Guice.createInjector(new UnoModule)
 
     val numOfPlayers = (file \\ "game" \\ "@numOfPlayers").text.toInt
