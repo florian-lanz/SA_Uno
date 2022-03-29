@@ -2,27 +2,30 @@ package de.htwg.se.uno.model.gameComponent.gameBaseImpl
 
 import scala.collection.mutable.{ListBuffer, Stack}
 
-class Player() {
-  var handCards = new ListBuffer[Card]()
+case class Player(handCards: List[Card]) {
+//  var handCards = new ListBuffer[Card]()
 
-  def pushMove(string:String, color : Int, game: Game) : Player = {
-    if(equalsCard(string)) {
-      val card = getCard(string)
-      if (pushable(card, game)) {
-        return pushCard(card, color, game)
-      }
-    }
-    this
-  }
-  def pullMove(game:Game) : Player = {
-    if (!game.anotherPull) {
-      pull(game)
-    } else {
-      game.anotherPull = false
-      game.special.push(0)
-      this
-    }
-  }
+//  def pushMove(string: String, color: Int, game: Game): Player = {
+//    val cardOption = getCard(string)
+//    if cardOption.isDefined then
+//      val card = cardOption.get
+//      if pushable(card, game) then
+//        pushCard(card)
+//      else
+//        copy()
+//    else
+//      copy()
+//  }
+
+//  def pullMove(game: Game): Player = {
+//    if (!game.alreadyPulled) {
+//      pull(game)
+//    } else {
+//      game.alreadyPulled = false
+//      game.special.push(0)
+//      this
+//    }
+//  }
 
   def pushable(card: Card, game: Game) : Boolean = {
     if (game.init.cardsRevealed.head.value == Value.PlusTwo && card.value != Value.PlusTwo && game.special.top > 0) {
@@ -81,21 +84,24 @@ class Player() {
     game.anotherPull = false
     this
   }
-  def pull(game: Game) : Player = {
-    handCards += Card(game.init.cardsCovered.head.color, game.init.cardsCovered.head.value)
-    game.init.cardsCovered = game.init.cardsCovered.drop(1)
-    if (game.special.top > 0) {
-      game.anotherPull = false
-      for (_ <- 2 to game.special.top) {
-        handCards += Card(game.init.cardsCovered.head.color, game.init.cardsCovered.head.value)
-        game.init.cardsCovered = game.init.cardsCovered.drop(1)
-      }
-    } else {
-      game.anotherPull = true
-      game.redoVariable = true
-    }
-    game.special.push(0)
-    this
+
+  def pullCard(card: Card): Player = {
+    copy(card :: handCards)
+
+//    handCards += Card(game.init.cardsCovered.head.color, game.init.cardsCovered.head.value)
+//    game.init.cardsCovered = game.init.cardsCovered.drop(1)
+//    if (game.special.top > 0) {
+//      game.alreadyPulled = false
+//      for (_ <- 2 to game.special.top) {
+//        handCards += Card(game.init.cardsCovered.head.color, game.init.cardsCovered.head.value)
+//        game.init.cardsCovered = game.init.cardsCovered.drop(1)
+//      }
+//    } else {
+//      game.alreadyPulled = true
+//      game.redoVariable = true
+//    }
+//    game.special.push(0)
+//    this
   }
 
   def equalsCard(s: String): Boolean = {

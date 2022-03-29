@@ -1,10 +1,11 @@
 package de.htwg.se.uno.model.gameComponent.gameBaseImpl
 
+import scala.annotation.tailrec
 import scala.collection.mutable.{ListBuffer, Stack}
 import scala.swing.Color
 
-class Enemy() {
-  var enemyCards = new ListBuffer[Card]()
+case class Enemy(enemyCards: List[Card]) {
+//  var enemyCards = new ListBuffer[Card]()
 
   def enemy(game: Game) : Enemy = {
     val s = game.toString
@@ -164,106 +165,130 @@ class Enemy() {
     this
   }
 
-  def pushable1(card : Card, game : Game) : Boolean = {
-    if (((game.init.cardsRevealed.head.value == Value.PlusTwo && card.value == Value.PlusTwo) ||
-          (game.init.cardsRevealed.head.value == Value.PlusFour && card.value == Value.PlusFour)) && game.special.top > 0)  {
-      true
-    } else {
-      false
-    }
+  def shouldPushDrawCard(card: Card, revealedCard: Card, revealedCardEffect: Int): Boolean = {
+    ((revealedCard.value == Value.PlusTwo && card.value == Value.PlusTwo) ||
+      (revealedCard.value == Value.PlusFour && card.value == Value.PlusFour)) && revealedCardEffect > 0
   }
-  def pushable2(card : Card, game : Game) : Boolean = {
-    if (card.color == game.init.cardsRevealed.head.color && card.value != Value.Suspend &&
-          card.value != Value.DirectionChange && card.value != Value.PlusTwo && card.color != Color.Special &&
-          game.special.top <= 0)  {
-      true
-    } else {
-      false
-    }
+  def canPushBasicCardWithSameColor(card: Card, revealedCard: Card, revealedCardEffect: Int): Boolean = {
+    card.color == revealedCard.color && card.value != Value.Suspend &&
+      card.value != Value.DirectionChange && card.value != Value.PlusTwo && card.color != Color.Special &&
+      revealedCardEffect <= 0
   }
-  def pushable3(card : Card, game : Game) : Boolean = {
-    if (card.color == game.init.cardsRevealed.head.color && card.color != Color.Special &&
-          game.special.top <= 0 && card.value != Value.PlusTwo) {
-      true
-    } else {
-      false
-    }
+  def canPushSuspendOrDirectionChangeWithSameColor(card: Card, revealedCard: Card, revealedCardEffect: Int): Boolean = {
+    card.color == revealedCard.color && card.color != Color.Special &&
+      revealedCardEffect <= 0 && card.value != Value.PlusTwo
   }
-  def pushable4(card : Card, game : Game) : Boolean = {
-    if (card.value == game.init.cardsRevealed.head.value && card.color != Color.Special &&
-          card.value != Value.Suspend && card.value != Value.DirectionChange && card.value != Value.PlusTwo &&
-          game.special.top <= 0) {
-      true
-    } else {
-      false
-    }
+  def canPushBasicCardWithSameValue(card: Card, revealedCard: Card, revealedCardEffect: Int): Boolean = {
+    card.value == revealedCard.value && card.color != Color.Special &&
+      card.value != Value.Suspend && card.value != Value.DirectionChange && card.value != Value.PlusTwo &&
+      revealedCardEffect <= 0
   }
-  def pushable5(card : Card, game : Game) : Boolean = {
-    if (card.value == game.init.cardsRevealed.head.value && card.color != Color.Special &&
-      game.special.top <= 0 && card.value != Value.PlusTwo) {
-      true
-    } else {
-      false
-    }
+  def canPushSuspendOrDirectionChangeWithSameValue(card: Card, revealedCard: Card, revealedCardEffect: Int): Boolean = {
+    card.value == revealedCard.value && card.color != Color.Special &&
+      revealedCardEffect <= 0 && card.value != Value.PlusTwo
   }
-  def pushable6(card : Card, game : Game) : Boolean = {
-    if (card.value == Value.ColorChange && game.special.top <= 0) {
-      true
-    } else {
-      false
-    }
+  def canPushColorChange(card: Card, revealedCard: Card, revealedCardEffect: Int): Boolean = {
+    card.value == Value.ColorChange && revealedCardEffect <= 0
   }
-  def pushable7(card : Card, game : Game) : Boolean = {
-    if (game.init.cardsRevealed.head.color == Color.Special) {
-      true
-    } else {
-      false
-    }
+  def canPushOnSpecial(card: Card, revealedCard: Card, revealedCardEffect: Int): Boolean = {
+    revealedCard.color == Color.Special
   }
-  def pushable8(card : Card, game : Game) : Boolean = {
-    if (card.value == Value.PlusTwo && (game.init.cardsRevealed.head.value == card.value ||
-          game.init.cardsRevealed.head.color == card.color) && game.special.top <= 0) {
-      true
-    } else {
-      false
-    }
+  def canPushPlusTwo(card: Card, revealedCard: Card, revealedCardEffect: Int): Boolean = {
+    card.value == Value.PlusTwo && (revealedCard.value == card.value ||
+      revealedCard.color == card.color)
   }
-  def pushable9(card : Card, game : Game) : Boolean = {
-    if (card.value == Value.PlusFour && game.init.cardsRevealed.head.value != Value.PlusTwo) {
-      for (i <- 1 to enemyCards.length) {
-        if (enemyCards(i - 1).color == game.init.cardsRevealed.head.color &&
-            game.init.cardsRevealed.head.color != Color.Special && game.init.cardsRevealed.head.value != Value.PlusFour) {
-          return false
-        }
+  def canPushPlusFour(card: Card, revealedCard: Card, revealedCardEffect: Int): Boolean = {
+    if card.value == Value.PlusFour && !(revealedCard.value == Value.PlusTwo && revealedCardEffect > 0) then
+      @tailrec
+      def canPushPlusFourRecursion(i: Int): Boolean = {
+        if i < enemyCards.length then
+          if enemyCards(i).color == revealedCard.color &&
+        revealedCard.color != Color.Special && revealedCard.value != Value.PlusFour then
+            false
+          else
+            canPushPlusFourRecursion(i + 1)
+        else
+          true
       }
-      true
-    } else {
+      canPushPlusFourRecursion(0)
+    else
       false
     }
   }
 
-  def ki(game : Game) : Enemy = {
-    for (i <- 1 to enemyCards.length) {
-      if(pushable9(enemyCards(i - 1), game)) {
-        return pushCardEnemy(enemyCards(i-1), game)
-      }
+  def ki(revealedCard: Card, revealedCardEffect: Int): Enemy = {
+    @tailrec
+    def kiRecursion1(i: Int): Int = {
+      if i < enemyCards.length then
+        if canPushPlusFour(enemyCards(i), revealedCard, revealedCardEffect) then
+          i
+        else
+          kiRecursion1(i + 1)
+      else
+        -1
     }
-    for (i <- 1 to enemyCards.length) {
-      if(enemyCards(i - 1).value == Value.PlusTwo && game.init.cardsRevealed.head.value != Value.PlusFour &&
-        (enemyCards(i - 1).value == game.init.cardsRevealed.head.value ||
-          enemyCards(i - 1).color == game.init.cardsRevealed.head.color)) {
-        return pushCardEnemy(enemyCards(i-1), game)
-      }
+    @tailrec
+    def kiRecursion2(i: Int): Int = {
+      if i < enemyCards.length then
+        if canPushPlusTwo(enemyCards(i), revealedCard, revealedCardEffect) then
+          i
+        else
+          kiRecursion2(i + 1)
+      else
+        -1
     }
-    for (i <- 1 to enemyCards.length) {
-      if((enemyCards(i - 1).value == Value.Suspend || enemyCards(i - 1).value == Value.DirectionChange) &&
-        ((game.init.cardsRevealed.head.value != Value.PlusTwo &&
-          game.init.cardsRevealed.head.value != Value.PlusFour) || game.special.top <= 0) &&
-          (enemyCards(i - 1).value == game.init.cardsRevealed.head.value ||
-          enemyCards(i - 1).color == game.init.cardsRevealed.head.color)) {
-        return pushCardEnemy(enemyCards(i-1), game)
-      }
+    @tailrec
+    def kiRecursion3(i: Int): Int = {
+      if i < enemyCards.length then
+        if (enemyCards(i).value == Value.Suspend || enemyCards(i).value == Value.DirectionChange) && revealedCardEffect <= 0 &&
+          (enemyCards(i).value == revealedCard.value || enemyCards(i).color == revealedCard.color) then
+          i
+        else
+          kiRecursion3(i + 1)
+      else
+        -1
     }
-    this
+    val index1 = kiRecursion1(0)
+    val index = if index1 != -1 then index1 else if kiRecursion2(0) != -1 then kiRecursion2(0) else kiRecursion3(0)
+    if index != -1 then
+      pushCard(enemyCards(index))
+    else
+      copy()
+
+
+//    val index1 = kiRecursion1(0)
+//    if index1 != -1 then
+//      copy(pushCard(enemyCards(index1)))
+//    else
+//      @tailrec
+//      def kiRecursion2(i: Int): Int = {
+//        if i < enemyCards.length then
+//          if canPushPlusTwo(enemyCards(i), revealedCard, revealedCardEffect) then
+//            i
+//          else
+//            kiRecursion2(i + 1)
+//        else
+//          -1
+//      }
+//      val index2 = kiRecursion2(0)
+//      if index2 != -1 then
+//        copy(pushCard(enemyCards(index2)))
+//      else
+//        @tailrec
+//        def kiRecursion3(i: Int): Int = {
+//          if i < enemyCards.length then
+//            if (enemyCards(i).value == Value.Suspend || enemyCards(i).value == Value.DirectionChange) && revealedCardEffect <= 0 &&
+//            (enemyCards(i).value == revealedCard.value || enemyCards(i).color == revealedCard.color) then
+//              i
+//            else
+//              kiRecursion3(i + 1)
+//          else
+//            -1
+//        }
+//        val index3 = kiRecursion3(0)
+//        if index3 != -1 then
+//          copy(pushCard(enemyCards(index3)))
+//        else
+//          copy()
   }
 }

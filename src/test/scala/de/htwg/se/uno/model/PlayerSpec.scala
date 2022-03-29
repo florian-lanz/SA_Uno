@@ -98,14 +98,6 @@ class PlayerSpec extends AnyWordSpec {
         newGame = newGame.createTestGame()
         newGame.init.player.pull(newGame) should be(newGame.init.player)
       }
-
-      "Should check if a String equals a card" in {
-        newGame.init.player.equalsCard("R 1") should be(true)
-      }
-      "Should check if a String equals no card" in {
-        newGame.init.player.equalsCard("Hey") should be(false)
-      }
-
       "Should get the Carf of a String" in {
         newGame.init.player.getCard("R 1") should be(Card(Color.Red, Value.One))
       }

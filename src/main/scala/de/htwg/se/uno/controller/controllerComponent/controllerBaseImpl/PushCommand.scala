@@ -15,6 +15,7 @@ class PushCommand(string: String, color : Int, controller: Controller) extends C
 
   override def redoStep: Unit = {
     controller.undoList = controller.fileIo.gameToJson(controller.game).toString :: controller.undoList
-    controller.game = controller.game.pushMove(string, color)
+    controller.game = controller.fileIo.load(controller.redoList.head)
+    controller.redoList = controller.redoList.tail
   }
 }

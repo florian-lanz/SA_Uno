@@ -129,7 +129,7 @@ class Controller @Inject() (var game: GameInterface) extends ControllerInterface
   def undo(): Unit = {
     var undo = true
     undoManager.undoStep()
-    while (!game.nextTurn() && undo) do
+    while !game.nextTurn() && undo do
       undo = undoManager.undoStep()
     while !game.nextTurn() do
       game.setDirection()

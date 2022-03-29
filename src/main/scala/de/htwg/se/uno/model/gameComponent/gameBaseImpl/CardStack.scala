@@ -10,6 +10,8 @@ case class CardStack(cardStack: List[Card] = List()):
       val value = Value.fromOrdinal(index)
       val newCardStack = if value == Value.PlusFour || value == Value.ColorChange then
         cardStack ::: List.fill(amountSpecialCards)(Card(Color.Special, value))
+      else if value == Value.Zero then
+        cardStack ::: List(Card(Color.Red, value), Card(Color.Blue, value), Card(Color.Green, value), Card(Color.Yellow, value))
       else
         cardStack ::: List.fill(amountColorCards)(List(Card(Color.Red, value), Card(Color.Blue, value), 
           Card(Color.Green, value), Card(Color.Yellow, value))).flatten
