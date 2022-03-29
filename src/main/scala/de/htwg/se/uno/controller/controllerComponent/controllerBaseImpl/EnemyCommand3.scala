@@ -9,6 +9,7 @@ class EnemyCommand3(controller: Controller) extends Command {
   }
 
   override def undoStep: Unit = {
+    controller.redoList = controller.fileIo.gameToJson(controller.game).toString :: controller.redoList
     controller.game = controller.fileIo.load(controller.undoList.head)
     controller.undoList = controller.undoList.tail
   }

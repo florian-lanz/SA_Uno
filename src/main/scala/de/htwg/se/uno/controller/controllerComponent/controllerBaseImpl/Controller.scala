@@ -17,6 +17,7 @@ class Controller @Inject() (var game: GameInterface) extends ControllerInterface
   private var controllerEventString = "Du bist dran. Mögliche Befehle: q, n, t, s [Karte], g, u, r"
   private var savedSpecialCard = ""
   var undoList: List[String] = List()
+  var redoList: List[String] = List()
 
   def createGame(size: Int):Unit = {
     size match {
@@ -140,14 +141,7 @@ class Controller @Inject() (var game: GameInterface) extends ControllerInterface
     won()
   }
   def redo(): Unit = {
-    game = game.setRedoVariable()
-    game.setActivePlayer()
     undoManager.redoStep
-    if (game.getRedoVariable){
-      game = game.setDirection()
-      game = game.setActivePlayer()
-      game = game.setDirection()
-    }
     controllerEvent("redo")
     publish(new GameChanged)
     shuffle()

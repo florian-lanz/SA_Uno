@@ -15,26 +15,16 @@ case class Game @Inject() (@Named("DefaultPlayers") numOfPlayers: 2 | 3 | 4) ext
 
   var activePlayer = numOfPlayers - 1
   private var direction = true
-  var anotherPull = false
-  var special = Stack[Integer](0)
-  var redoVariable = false
-  private var lengthForTests = 0
-  private var shuffled = Stack[ListBuffer[Card]]()
-  private var unshuffled = Stack[ListBuffer[Card]]()
-  private var reshuffled = Stack[ListBuffer[Card]]()
+  var alreadyPulled = false
+  var revealedCardEffect = 0
 
   def createGame() : Game = {
     init = InitializeGameStrategy()
     init = init.initializeGame(numOfPlayers)
     activePlayer = numOfPlayers - 1
     direction = true
-    anotherPull = false
-    special.popAll()
-    special.push(0)
-    shuffled.popAll()
-    unshuffled.popAll()
-    reshuffled.popAll()
-    redoVariable = false
+    alreadyPulled = false
+    revealedCardEffect = 0
     this
   }
   def createTestGame() : Game = {
@@ -42,108 +32,67 @@ case class Game @Inject() (@Named("DefaultPlayers") numOfPlayers: 2 | 3 | 4) ext
     init = init.initializeGame(numOfPlayers)
     activePlayer = numOfPlayers - 1
     direction = true
-    anotherPull = false
-    special.popAll()
-    special.push(0)
-    shuffled.popAll()
-    unshuffled.popAll()
-    reshuffled.popAll()
-    redoVariable = false
+    alreadyPulled = false
+    revealedCardEffect = 0
     this
   }
 
   def pushMove(string : String, color : Int) : Game = {
-    if (special.top != - 1) {
-      redoVariable = false
+    if (revealedCardEffect != - 1) {
       init.player = init.player.pushMove(string, color, this)
-    } else if (special.top == -1) {
-      special.push(0)
-      redoVariable = true
+    } else if (revealedCardEffect == -1) {
+      revealedCardEffect = 0
       setActivePlayer()
     }
     this
   }
   def pullMove() : Game = {
-    if(special.top != - 1) {
-      redoVariable = false
+    if(revealedCardEffect != - 1) {
       init.player = init.player.pullMove(this)
-    } else if (special.top == -1) {
-      special.push(0)
-      redoVariable = true
+    } else {
+      revealedCardEffect = 0
       setActivePlayer()
     }
     this
   }
   def enemy() : Game = {
-    if (special.top != - 1) {
-      redoVariable = false
+    if (revealedCardEffect != - 1) {
       init.enemy = init.enemy.enemy(this)
-    } else if (special.top == -1) {
-      special.push(0)
-      redoVariable = false
+    } else if (revealedCardEffect == -1) {
+      revealedCardEffect = 0
     }
     this
   }
   def enemy2() : Game = {
-    if (special.top != - 1) {
-      redoVariable = false
+    if (revealedCardEffect != - 1) {
       init.enemy2 = init.enemy2.enemy(this)
-    } else if (special.top == -1) {
-      special.push(0)
-      redoVariable = false
+    } else if (revealedCardEffect == -1) {
+      revealedCardEffect = 0
     }
     this
   }
   def enemy3() : Game = {
-    if (special.top != - 1) {
-      redoVariable = false
+    if (revealedCardEffect != - 1) {
       init.enemy3 = init.enemy3.enemy(this)
-    } else if (special.top == -1) {
-      special.push(0)
-      redoVariable = false
+    } else if (revealedCardEffect == -1) {
+      revealedCardEffect = 0
     }
     this
   }
 
-  def setLength(i : Integer) : Unit = {
-    this.lengthForTests = i
-  }
-
   def getLength(list:Integer) : Int = {
-    if (list == 0) {
-      if (lengthForTests == 1) {
-        lengthForTests = 0
-        lengthForTests
-      } else
-        init.enemy.enemyCards.length
-    } else if (list == 1) {
-      if (lengthForTests == 2) {
-        lengthForTests = 0
-        lengthForTests
-      } else
-        init.enemy2.enemyCards.length
-    } else if (list == 2) {
-      if (lengthForTests == 3) {
-        lengthForTests = 0
-        lengthForTests
-      } else
-        init.enemy3.enemyCards.length
-    } else if (list == 3) {
+    if list == 0 then
+      init.enemy.enemyCards.length
+    else if list == 1 then
+      init.enemy2.enemyCards.length
+    else if list == 2 then
+      init.enemy3.enemyCards.length
+    else if list == 3 then
       init.cardsRevealed.length
-    } else if (list == 4) {
-      if (lengthForTests == 4) {
-        lengthForTests = 0
-        lengthForTests
-      } else
-        init.player.handCards.length
-    } else {
-      if (lengthForTests==5) {
-        lengthForTests = 0
-        lengthForTests
-      } else {
-        init.cardsCovered.length
-      }
-    }
+    else if list == 4 then
+      init.player.handCards.length
+    else
+      init.cardsCovered.length
   }
   def getCardText(list : Int, index : Int) : String = {
     if (list == 3 && index == 1) {
@@ -234,26 +183,17 @@ case class Game @Inject() (@Named("DefaultPlayers") numOfPlayers: 2 | 3 | 4) ext
     this
   }
   def setDirection() : Game = {
-    if (direction) {
-      direction = false
-    } else {
-      direction = true
-    }
+    direction = !direction
     this
   }
   def setAnotherPull(b : Boolean = false) : Game = {
-    anotherPull = b
-    this
-  }
-  def setRedoVariable(b : Boolean = true) : Game = {
-    redoVariable = b
+    alreadyPulled = b
     this
   }
 
   def getActivePlayer: Int = activePlayer
   def getDirection: Boolean = direction
-  def getAnotherPull : Boolean = anotherPull
-  def getRedoVariable : Boolean = redoVariable
+  def getAnotherPull : Boolean = alreadyPulled
 
 
   def getAllCards(list: Int, index: Int) : String = {
@@ -273,47 +213,41 @@ case class Game @Inject() (@Named("DefaultPlayers") numOfPlayers: 2 | 3 | 4) ext
 
   def setAllCards(list: Int, card: Card) : Game = {
     if (list == 0)
-      init.enemy.enemyCards = init.enemy.enemyCards :+ card
+      init.enemy = init.enemy.pushCard(card)
     else if (list == 1)
-      init.enemy2.enemyCards = init.enemy2.enemyCards :+ card
+      init.enemy2 = init.enemy2.pushCard(card)
     else if (list == 2)
-      init.enemy3.enemyCards = init.enemy3.enemyCards :+ card
+      init.enemy3 = init.enemy3.pushCard(card)
     else if (list == 3)
       init.cardsRevealed = init.cardsRevealed :+ card
     else if (list == 4)
-    init.player.handCards = init.player.handCards :+ card
+    init.player = init.player.pushCard(card)
     else
       init.cardsCovered = init.cardsCovered :+ card
     this
   }
 
   def clearAllLists() : Game = {
-    init.enemy.enemyCards = new ListBuffer[Card]()
-    init.enemy2.enemyCards = new ListBuffer[Card]()
-    init.enemy3.enemyCards = new ListBuffer[Card]()
-    init.player.handCards = new ListBuffer[Card]()
+    init.enemy = Enemy(List[Card]())
+    init.enemy2 = Enemy(List[Card]())
+    init.enemy3 = Enemy(List[Card]())
+    init.player = Player(List[Card]())
     init.cardsCovered = new ListBuffer[Card]()
     init.cardsRevealed = new ListBuffer[Card]()
-    special.popAll()
-    special.push(0)
-    shuffled.popAll()
-    unshuffled.popAll()
-    reshuffled.popAll()
-    redoVariable = false
+    revealedCardEffect = 0
     this
   }
 
   def getSpecialTop : Int = {
-    special.top
+    revealedCardEffect
   }
 
-  def setSpecialTop(io : Int) : Game = {
-    special.push(io)
+  def setRevealedCardEffect(io : Int) : Game = {
+    revealedCardEffect = io
     this
   }
 
   def shuffle() : Game = {
-    unshuffled.push(init.cardsRevealed.drop(1))
     var cards = init.cardsCovered ++ init.cardsRevealed.drop(1)
     var n = cards.length
     for (_ <- cards.indices) {
@@ -324,7 +258,6 @@ case class Game @Inject() (@Named("DefaultPlayers") numOfPlayers: 2 | 3 | 4) ext
       n -= 1
     }
     init.cardsRevealed = init.cardsRevealed.take(1)
-    shuffled.push(init.cardsCovered)
     this
   }
 

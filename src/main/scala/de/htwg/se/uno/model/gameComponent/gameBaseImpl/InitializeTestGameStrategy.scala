@@ -4,34 +4,11 @@ import scala.collection.mutable.ListBuffer
 
 class InitializeTestGameStrategy extends InitializeGameStrategy {
   override def initializeGame(numOfPlayers: 2 | 3 | 4): InitializeTestGameStrategy = {
-    cardsCovered = new ListBuffer[Card]()
+    cardsCovered = CardStack().createCoveredCardStack()
     cardsRevealed = new ListBuffer[Card]()
-    enemy.enemyCards = new ListBuffer[Card]()
-    player.handCards = new ListBuffer[Card]()
-    enemy2.enemyCards = new ListBuffer[Card]()
-    enemy3.enemyCards = new ListBuffer[Card]()
-    var cards = new ListBuffer[Card]()
-    for (color <- Color.values) {
-      for (value <- Value.values) {
-        if (value == Value.Zero && color != Color.Special) {
-          cards += Card(color, value)
-        } else if (color == Color.Special && (value == Value.ColorChange || value == Value.PlusFour)) {
-          for (_ <- 0 to 3)
-            cards += Card(color, value)
-        } else if (color != Color.Special && (value != Value.PlusFour && value != Value.ColorChange)) {
-          for (_ <- 0 to 1)
-            cards += Card(color, value)
-        }
-      }
-    }
-    for (_ <- 1 to 108) {
-      cardsCovered = cardsCovered :+ cards(0)
-      cards = cards.take(0) ++ cards.drop(1)
-    }
-
+    
     cardsRevealed = cardsRevealed :+ cardsCovered(0)
     cardsCovered = cardsCovered.drop(1)
-
 
     player.handCards = player.handCards :+ cardsCovered(99)
     cardsCovered = cardsCovered.take(99) ++ cardsCovered.drop(100)
@@ -113,6 +90,7 @@ class InitializeTestGameStrategy extends InitializeGameStrategy {
     cardsCovered = cardsCovered.take(25) ++ cardsCovered.drop(26)
     enemy3.enemyCards = enemy3.enemyCards :+ cardsCovered(25)
     cardsCovered = cardsCovered.take(25) ++ cardsCovered.drop(26)
+
 
     this
   }

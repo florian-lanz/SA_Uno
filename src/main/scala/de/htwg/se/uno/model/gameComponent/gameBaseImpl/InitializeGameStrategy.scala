@@ -5,10 +5,10 @@ import scala.collection.mutable.ListBuffer
 trait InitializeGameStrategy {
   var cardsCovered = new ListBuffer[Card]()
   var cardsRevealed = new ListBuffer[Card]()
-  var player = new Player
-  var enemy = new Enemy
-  var enemy2 = new Enemy
-  var enemy3 = new Enemy
+  var player: Player = Player(List[Card]())
+  var enemy: Enemy = Enemy(List[Card]())
+  var enemy2: Enemy = Enemy(List[Card]())
+  var enemy3: Enemy = Enemy(List[Card]())
 
   def initializeGame(numOfPlayers: 2 | 3 | 4): InitializeGameStrategy
 }

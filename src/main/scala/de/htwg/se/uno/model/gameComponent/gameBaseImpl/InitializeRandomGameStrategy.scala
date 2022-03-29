@@ -4,12 +4,6 @@ import scala.collection.mutable.ListBuffer
 
 class InitializeRandomGameStrategy extends InitializeGameStrategy {
   override def initializeGame(numOfPlayers: 2 | 3 | 4): InitializeRandomGameStrategy = {
-    cardsCovered = new ListBuffer[Card]()
-    cardsRevealed = new ListBuffer[Card]()
-    enemy.enemyCards = new ListBuffer[Card]()
-    player.handCards = new ListBuffer[Card]()
-    enemy2.enemyCards = new ListBuffer[Card]()
-    enemy3.enemyCards = new ListBuffer[Card]()
     var cards = new ListBuffer[Card]()
     for (color <- Color.values) {
       for (value <- Value.values) {
@@ -33,15 +27,15 @@ class InitializeRandomGameStrategy extends InitializeGameStrategy {
       n -= 1
     }
     for (i <- 1 to 7) {
-      player.handCards = cardsCovered.head +: player.handCards
+      player = player.pushCard(cardsCovered.head)
       cardsCovered = cardsCovered.drop(1)
-      enemy.enemyCards = cardsCovered.head +: enemy.enemyCards
+      enemy = enemy.pushCard(cardsCovered.head)
       cardsCovered = cardsCovered.drop(1)
       if(numOfPlayers >= 3) {
-        enemy2.enemyCards = cardsCovered.head +: enemy2.enemyCards
+        enemy2 = enemy2.pushCard(cardsCovered.head)
         cardsCovered = cardsCovered.drop(1)
         if (numOfPlayers == 4) {
-          enemy3.enemyCards = cardsCovered.head +: enemy3.enemyCards
+          enemy3 = enemy3.pushCard(cardsCovered.head)
           cardsCovered = cardsCovered.drop(1)
         }
       }
