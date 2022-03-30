@@ -13,7 +13,7 @@ import play.api.libs.json.{JsValue, Json}
 import scala.collection.mutable.ListBuffer
 import scala.xml.{Node, PrettyPrinter}
 
-class FileIO extends FileIOInterface{
+class FileIO extends FileIOInterface {
   override def load(source: String = "game.xml"): GameInterface = {
     var game: GameInterface = null
     val file = scala.xml.XML.loadFile(source)
@@ -21,9 +21,18 @@ class FileIO extends FileIOInterface{
 
     val numOfPlayers = (file \\ "game" \\ "@numOfPlayers").text.toInt
     numOfPlayers match {
-      case 2 => game = injector.getInstance(Key.get(classOf[GameInterface], Names.named("2 Players")))
-      case 3 => game = injector.getInstance(Key.get(classOf[GameInterface], Names.named("3 Players")))
-      case 4 => game = injector.getInstance(Key.get(classOf[GameInterface], Names.named("4 Players")))
+      case 2 =>
+        game = injector.getInstance(
+          Key.get(classOf[GameInterface], Names.named("2 Players"))
+        )
+      case 3 =>
+        game = injector.getInstance(
+          Key.get(classOf[GameInterface], Names.named("3 Players"))
+        )
+      case 4 =>
+        game = injector.getInstance(
+          Key.get(classOf[GameInterface], Names.named("4 Players"))
+        )
     }
 
     val activePlayer = (file \\ "game" \ "@activePlayer").text.toInt
@@ -48,8 +57,8 @@ class FileIO extends FileIOInterface{
 
     game = game.clearAllLists()
 
-    val specialTop = (file \\ "game" \ "@specialTop").text.toInt
-    game = game.setSpecialTop(specialTop)
+    // val specialTop = (file \\ "game" \ "@specialTop").text.toInt
+    // game = game.setSpecialTop(specialTop)
 
     val listLength = (file \\ "length")
     var lengths = new ListBuffer[Int]()
@@ -91,35 +100,35 @@ class FileIO extends FileIOInterface{
     pw.write(xml)
     pw.close()
   }
-  
+
   override def gameToJson(game: GameInterface): JsValue = Json.obj()
 
   def gameToXml(game: GameInterface): Node = {
     <game
-      numOfPlayers={ game.getNumOfPlayers.toString }
-      activePlayer={ game.getActivePlayer.toString }
-      direction={ game.getDirection.toString }
-      anotherPull={ game.getAnotherPull.toString }
-      specialTop={ game.getSpecialTop.toString }
+      numOfPlayers={game.getNumOfPlayers.toString}
+      activePlayer={game.getActivePlayer.toString}
+      direction={game.getDirection.toString}
+      anotherPull={game.getAnotherPull.toString}
+      specialTop={game.getSpecialTop.toString}
     >
       <cardLists>
         {
-          for {
-            listNumber <- 0 to 5
-            cardNumber <- 0 until game.getLength(listNumber)
-          } yield {
-            <card card={ game.getAllCards(listNumber, cardNumber) }></card>
-          }
-        }
+      for {
+        listNumber <- 0 to 5
+        cardNumber <- 0 until game.getLength(listNumber)
+      } yield {
+        <card card={game.getAllCards(listNumber, cardNumber)}></card>
+      }
+    }
       </cardLists>
       <listLengths>
         {
-          for {
-            i <- 0 to 5
-          } yield {
-            <length length={ game.getLength(i).toString }></length>
-          }
-        }
+      for {
+        i <- 0 to 5
+      } yield {
+        <length length={game.getLength(i).toString}></length>
+      }
+    }
       </listLengths>
     </game>
   }

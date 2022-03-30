@@ -4,21 +4,53 @@ import scala.annotation.tailrec
 import scala.util.Random
 
 case class CardStack(cardStack: List[Card] = List()):
-  def createCoveredCardStack(amountColorCards: Int = 2, amountSpecialCards: Int = 4): CardStack =
+  def createCoveredCardStack(
+      amountColorCards: Int = 2,
+      amountSpecialCards: Int = 4
+  ): CardStack =
     @tailrec
-    def cardStackRecursion(cardStack: List[Card], index: Int): List[Card] =
-      val value = Value.fromOrdinal(index)
-      val newCardStack = if value == Value.PlusFour || value == Value.ColorChange then
-        cardStack ::: List.fill(amountSpecialCards)(Card(Color.Special, value))
-      else if value == Value.Zero then
-        cardStack ::: List(Card(Color.Red, value), Card(Color.Blue, value), Card(Color.Green, value), Card(Color.Yellow, value))
-      else
-        cardStack ::: List.fill(amountColorCards)(List(Card(Color.Red, value), Card(Color.Blue, value), 
-          Card(Color.Green, value), Card(Color.Yellow, value))).flatten
-      if index < Value.values.length - 1 then
-        cardStackRecursion(newCardStack, index + 1)
-      else
-        newCardStack
+    def cardStackRecursion(
+        cardStack: List[Card],
+        colorIndex: Int
+    ): List[Card] = {
+
+      def cardStackRecursion2(
+          cardStack: List[Card],
+          color: Color,
+          valueIndex: Int
+      ): List[Card] = {
+
+        if valueIndex < Value.values.length then
+          val value = Value.fromOrdinal(valueIndex)
+          val newCardStack =
+            if (value == Value.PlusFour || value == Value.ColorChange) && color == Color.Special
+            then
+              cardStack ::: List.fill(amountSpecialCards)(
+                Card(color, value)
+              )
+            else if value == Value.Zero && color != Color.Special then
+              cardStack ::: List(
+                Card(color, value)
+              )
+            else if value != Value.PlusFour && value != Value.ColorChange && color != Color.Special
+            then
+              cardStack ::: List
+                .fill(amountColorCards)(
+                  Card(color, value)
+                )
+            else cardStack
+          cardStackRecursion2(newCardStack, color, valueIndex + 1)
+        else cardStack
+      }
+
+      if colorIndex < Color.values.length then
+        val color = Color.fromOrdinal(colorIndex)
+        cardStackRecursion(
+          cardStackRecursion2(cardStack, color, 0),
+          colorIndex + 1
+        )
+      else cardStack
+    }
     val cardStack = cardStackRecursion(List(), 0)
     copy(cardStack)
 

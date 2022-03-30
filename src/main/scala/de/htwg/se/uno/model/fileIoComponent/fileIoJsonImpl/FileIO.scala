@@ -5,7 +5,12 @@ import com.google.inject.name.Names
 import de.htwg.se.uno.UnoModule
 import de.htwg.se.uno.model.gameComponent.gameBaseImpl
 import de.htwg.se.uno.model.fileIoComponent.FileIOInterface
-import de.htwg.se.uno.model.gameComponent.gameBaseImpl.{Card, CardStack, Color, Value}
+import de.htwg.se.uno.model.gameComponent.gameBaseImpl.{
+  Card,
+  CardStack,
+  Color,
+  Value
+}
 import de.htwg.se.uno.model.gameComponent.GameInterface
 import play.api.libs.json.*
 
@@ -13,16 +18,27 @@ import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
-class FileIO extends FileIOInterface{
-  override def load(source: String = Source.fromFile("game.json").getLines().mkString): GameInterface = {
+class FileIO extends FileIOInterface {
+  override def load(
+      source: String = Source.fromFile("game.json").getLines().mkString
+  ): GameInterface = {
     val json: JsValue = Json.parse(source)
     val injector = Guice.createInjector(new UnoModule)
 
     val numOfPlayers = (json \ "game" \ "numOfPlayers").get.toString.toInt
     var game: GameInterface = numOfPlayers match {
-      case 2 => injector.getInstance(Key.get(classOf[GameInterface], Names.named("2 Players")))
-      case 3 => injector.getInstance(Key.get(classOf[GameInterface], Names.named("3 Players")))
-      case 4 => injector.getInstance(Key.get(classOf[GameInterface], Names.named("4 Players")))
+      case 2 =>
+        injector.getInstance(
+          Key.get(classOf[GameInterface], Names.named("2 Players"))
+        )
+      case 3 =>
+        injector.getInstance(
+          Key.get(classOf[GameInterface], Names.named("3 Players"))
+        )
+      case 4 =>
+        injector.getInstance(
+          Key.get(classOf[GameInterface], Names.named("4 Players"))
+        )
     }
 
     val activePlayer = (json \ "game" \ "activePlayer").get.toString.toInt
@@ -42,8 +58,8 @@ class FileIO extends FileIOInterface{
 
     game = game.clearAllLists()
 
-    val specialTop = (json \ "game" \ "specialCard").get.toString.toInt
-    game = game.setSpecialTop(specialTop)
+    // val specialTop = (json \ "game" \ "specialCard").get.toString.toInt
+    // game = game.setSpecialTop(specialTop)
 
     def createCardLists(listName: String, listIndex: Int): GameInterface = {
       val list = (json \ "game" \ listName).as[List[String]]
@@ -53,18 +69,19 @@ class FileIO extends FileIOInterface{
         if i < list.length then
           val newGame = recursionCards(0, list(i), game)
           recursionList(i + 1, newGame)
-        else
-          game
+        else game
       }
 
       @tailrec
-      def recursionCards(j: Int, card: String, game: GameInterface): GameInterface = {
+      def recursionCards(
+          j: Int,
+          card: String,
+          game: GameInterface
+      ): GameInterface = {
         if j < cards.length && cards(j).toString.equals(card) then
           game.setAllCards(listIndex, cards(j))
-        else if j < cards.length then
-          recursionCards(j + 1, card, game)
-        else
-          game
+        else if j < cards.length then recursionCards(j + 1, card, game)
+        else game
       }
 
       recursionList(0, game)
@@ -89,22 +106,28 @@ class FileIO extends FileIOInterface{
         "anotherPull" -> JsBoolean(game.getAnotherPull),
         "specialCard" -> JsNumber(game.getSpecialTop),
         "enemy1Cards" -> JsArray(
-          for cardNumber <- 0 until game.getLength(0) yield JsString(game.getAllCards(0, cardNumber))
+          for cardNumber <- 0 until game.getLength(0)
+          yield JsString(game.getAllCards(0, cardNumber))
         ),
         "enemy2Cards" -> JsArray(
-          for cardNumber <- 0 until game.getLength(1) yield JsString(game.getAllCards(1, cardNumber))
+          for cardNumber <- 0 until game.getLength(1)
+          yield JsString(game.getAllCards(1, cardNumber))
         ),
         "enemy3Cards" -> JsArray(
-          for cardNumber <- 0 until game.getLength(2) yield JsString(game.getAllCards(2, cardNumber))
+          for cardNumber <- 0 until game.getLength(2)
+          yield JsString(game.getAllCards(2, cardNumber))
         ),
         "openCardStack" -> JsArray(
-          for cardNumber <- 0 until game.getLength(3) yield JsString(game.getAllCards(3, cardNumber))
+          for cardNumber <- 0 until game.getLength(3)
+          yield JsString(game.getAllCards(3, cardNumber))
         ),
         "playerCards" -> JsArray(
-          for cardNumber <- 0 until game.getLength(4) yield JsString(game.getAllCards(4, cardNumber))
+          for cardNumber <- 0 until game.getLength(4)
+          yield JsString(game.getAllCards(4, cardNumber))
         ),
         "coveredCardStack" -> JsArray(
-          for cardNumber <- 0 until game.getLength(5) yield JsString(game.getAllCards(5, cardNumber))
+          for cardNumber <- 0 until game.getLength(5)
+          yield JsString(game.getAllCards(5, cardNumber))
         )
       )
     )
