@@ -4,9 +4,8 @@ import com.fasterxml.jackson.annotation.JsonValue
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import de.htwg.se.uno.model.gameComponent.GameInterface
-
-import scala.collection.mutable
-import scala.collection.mutable.{ListBuffer, Stack}
+import scala.util.Random
+import scala.annotation.tailrec
 
 case class Game @Inject() (
     @Named("DefaultPlayers") numOfPlayers: 2 | 3 | 4,
@@ -17,7 +16,7 @@ case class Game @Inject() (
     revealedCardEffect: Int = 0,
     activePlayer: Int = 0,
     direction: Boolean = true,
-    alreadyPulled: Boolean = true
+    alreadyPulled: Boolean = false
 ) extends GameInterface {
 
   def createGame(): Game = {
@@ -26,29 +25,29 @@ case class Game @Inject() (
         .createCoveredCardStack()
         .shuffle()
         .cardStack
-    val revealedCards = List(cards.head)
+    val revealedCardsNew = List(cards.head)
 
     def initializePlayer(i: Int, handCards: List[Card]): List[Card] = {
       if i < 7 then initializePlayer(i + 1, cards(i + 1) :: handCards)
       else handCards
     }
 
-    val player = Player(initializePlayer(0, List[Card]()))
+    val playerNew = Player(initializePlayer(0, List[Card]()))
 
     def initializeEnemies(
         enemyCounter: Int,
         i: Int,
-        enemies: List[Card]
+        enemiesTemp: List[Card]
     ): List[Card] = {
       if enemyCounter < numOfPlayers - 1 then
         if i < 7 then
           initializeEnemies(
             enemyCounter,
             i + 1,
-            cards((enemyCounter + 1) * 7 + 1 + i) :: enemies
+            cards((enemyCounter + 1) * 7 + 1 + i) :: enemiesTemp
           )
-        else initializeEnemies(enemyCounter + 1, 0, enemies)
-      else enemies
+        else initializeEnemies(enemyCounter + 1, 0, enemiesTemp)
+      else enemiesTemp
     }
 
     val enemiesCards = initializeEnemies(0, 0, List[Card]())
@@ -59,29 +58,29 @@ case class Game @Inject() (
       else enemiesCards.slice(7, 14)
     val enemyThree = if numOfPlayers < 4 then List() else enemiesCards.drop(14)
 
-    val enemies = List(Enemy(enemyOne), Enemy(enemyTwo), Enemy(enemyThree))
+    val enemiesNew = List(Enemy(enemyOne), Enemy(enemyTwo), Enemy(enemyThree))
 
-    val coveredCards = cards.drop(numOfPlayers * 7 + 1)
+    val coveredCardsNew = cards.drop(numOfPlayers * 7 + 1)
 
     copy(
       numOfPlayers,
-      coveredCards,
-      revealedCards,
-      player,
-      enemies,
-      0,
-      numOfPlayers - 1,
-      true,
-      false
+      coveredCardsNew,
+      revealedCardsNew,
+      playerNew,
+      enemiesNew,
+      revealedCardEffect = 0,
+      activePlayer = numOfPlayers - 1,
+      direction = true,
+      alreadyPulled = false
     )
   }
 
   def createTestGame(): Game = {
     val cards = CardStack().createCoveredCardStack().cardStack
 
-    val revealedCards = List(cards.head)
+    val revealedCardsNew = List(cards.head)
 
-    val player = Player(
+    val playerNew = Player(
       List(
         cards(100),
         cards(104),
@@ -95,7 +94,7 @@ case class Game @Inject() (
       )
     )
 
-    val enemies = List(
+    val enemiesNew = List(
       Enemy(
         List(
           cards(101),
@@ -137,7 +136,7 @@ case class Game @Inject() (
       )
     )
 
-    val coveredCards =
+    val coveredCardsNew =
       ((((cards filterNot revealedCards.contains) filterNot player.handCards.contains) filterNot enemies(
         0
       ).enemyCards.contains) filterNot enemies(
@@ -145,359 +144,457 @@ case class Game @Inject() (
       ).enemyCards.contains) filterNot enemies(2).enemyCards.contains
 
     copy(
-      numOfPlayers,
-      coveredCards,
-      revealedCards,
-      player,
-      enemies,
-      0,
-      numOfPlayers - 1,
-      true,
-      false
+      coveredCards = coveredCardsNew,
+      revealedCards = revealedCardsNew,
+      player = playerNew,
+      enemies = enemiesNew,
+      revealedCardEffect = 0,
+      activePlayer = numOfPlayers - 1,
+      direction = true,
+      alreadyPulled = false
     )
   }
 
   def pushMove(string: String, color: Int): Game = {
-    val cardOption = player.getCard(string)
-    if cardOption.isDefined then
-      val card = cardOption.get
-      if player.canPush(card, revealedCards.head, revealedCardEffect) then
-        val playerNew = player.pushCard(card)
-        val coloredCard = color match
-          case 1 => Card(Color.Blue, card.value)
-          case 2 => Card(Color.Green, card.value)
-          case 3 => Card(Color.Yellow, card.value)
-          case 4 => Card(Color.Red, card.value)
-          case _ => card
-        val revealedCardsNew = coloredCard :: revealedCards
-        val alreadyPulledNew = false
-        val directionNew =
-          if card.value == Value.DirectionChange then !direction else direction
-        val revealedCardEffectNew = card.value match
-          case Value.Suspend  => -1
-          case Value.PlusTwo  => revealedCardEffect + 2
-          case Value.PlusFour => revealedCardEffect + 4
-          case _              => 0
-        copy(
-          numOfPlayers,
-          coveredCards,
-          revealedCardsNew,
-          playerNew,
-          enemies,
-          revealedCardEffectNew,
-          activePlayer,
-          directionNew,
-          alreadyPulledNew
-        )
+    if revealedCardEffect != -1 then
+      val cardOption = player.getCard(string)
+      if cardOption.isDefined then
+        val card = cardOption.get
+        if player.canPush(card, revealedCards.head, revealedCardEffect) then
+          val coloredCard = color match
+            case 1 => Card(Color.Blue, card.value)
+            case 2 => Card(Color.Green, card.value)
+            case 3 => Card(Color.Yellow, card.value)
+            case 4 => Card(Color.Red, card.value)
+            case _ => card
+          val revealedCardsNew = coloredCard :: revealedCards
+          val alreadyPulledNew = false
+          val revealedCardEffectNew = card.value match
+            case Value.Suspend  => -1
+            case Value.PlusTwo  => revealedCardEffect + 2
+            case Value.PlusFour => revealedCardEffect + 4
+            case _              => 0
+          copy(
+            revealedCards = revealedCardsNew,
+            player = player.pushCard(card),
+            revealedCardEffect = revealedCardEffectNew,
+            direction =
+              if card.value == Value.DirectionChange then !direction
+              else direction,
+            alreadyPulled = alreadyPulledNew
+          )
+        else copy()
       else copy()
-    else copy()
-
-    //    for (i <- 2 to handCards.length) {
-//      if (handCards(i - 2).color == card.color && handCards(i - 2).value == card.value && !alreadyPushed) {
-////        game.init.cardsRevealed = myCard +: game.init.cardsRevealed
-//        handCards = handCards.take(i - 2) ++ handCards.drop(i-1)
-//        alreadyPushed = true
-//      }
-//    }
-//    if (!alreadyPushed) {
-////      game.init.cardsRevealed = myCard +: game.init.cardsRevealed
-//      handCards = handCards.take(handCards.length - 1)
-//    }
-
-//    if (card.value == Value.DirectionChange) {
-//      game.setDirection()
-//      game.special.push(0)
-//    } else if (card.value == Value.PlusTwo) {
-//      game.special.push(game.special.top + 2)
-//    } else if (card.value == Value.PlusFour) {
-//      game.special.push(game.special.top + 4)
-//    } else if (card.value == Value.Suspend) {
-//      game.special.push(-1)
-//    } else {
-//      game.special.push(0)
-//    }
-//    game.alreadyPulled = false
-
-    // if (revealedCardEffect != -1) {
-    //   init.player = init.player.pushMove(string, color, this)
-    // } else if (revealedCardEffect == -1) {
-    //   revealedCardEffect = 0
-    //   setActivePlayer()
-    // }
-    this
+    else setActivePlayer().copy(revealedCardEffect = 0)
   }
   def pullMove(): Game = {
-    // if (revealedCardEffect != -1) {
-    //   init.player = init.player.pullMove(this)
-    // } else {
-    //   revealedCardEffect = 0
-    //   setActivePlayer()
-    // }
-    this
+    if revealedCardEffect != -1 then
+      if !alreadyPulled then
+
+        def pullMoveRecursion(
+            i: Int,
+            playerTemp: Player,
+            coveredCardsTemp: List[Card]
+        ): Game = {
+          if i < revealedCardEffect then
+            pullMoveRecursion(
+              i + 1,
+              playerTemp.pullCard(coveredCardsTemp.head),
+              coveredCardsTemp.tail
+            )
+          else if revealedCardEffect == 0 && i == 0 then
+            copy(
+              player = playerTemp.pullCard(coveredCardsTemp.head),
+              coveredCards = coveredCardsTemp.tail,
+              alreadyPulled = true
+            )
+          else
+            copy(
+              player = playerTemp,
+              coveredCards = coveredCardsTemp,
+              alreadyPulled = false
+            )
+        }
+
+        pullMoveRecursion(0, player, coveredCards).copy(revealedCardEffect = 0)
+      else copy(alreadyPulled = false, revealedCardEffect = 0)
+    else setActivePlayer().copy(revealedCardEffect = 0)
   }
-  def enemy(): Game = {
-    // if (revealedCardEffect != -1) {
-    //   init.enemy = init.enemy.enemy(this)
-    // } else if (revealedCardEffect == -1) {
-    //   revealedCardEffect = 0
-    // }
-    this
-  }
-  def enemy2(): Game = {
-    // if (revealedCardEffect != -1) {
-    //   init.enemy2 = init.enemy2.enemy(this)
-    // } else if (revealedCardEffect == -1) {
-    //   revealedCardEffect = 0
-    // }
-    this
-  }
-  def enemy3(): Game = {
-    // if (revealedCardEffect != -1) {
-    //   init.enemy3 = init.enemy3.enemy(this)
-    // } else if (revealedCardEffect == -1) {
-    //   revealedCardEffect = 0
-    // }
-    this
+  def enemy(enemyIndex: Int, kiNeeded: Boolean = true): Game = {
+    if revealedCardEffect != -1 then
+      if ((nextTurn() && player.handCards.length <= 3) || (!nextTurn() && enemies(
+          nextEnemy() - 1
+        ).enemyCards.length <= 3)) && kiNeeded
+      then ki(enemyIndex)
+      else
+        def enemyRecursion(
+            i: Int,
+            gameTemp: Game,
+            canPush: (Card, Card, Int) => Boolean
+        ): Game = {
+          val enemy = enemies(enemyIndex)
+          val card = enemy.enemyCards(i)
+          if i < enemy.enemyCards.length && !alreadyPulled then
+            if canPush(
+                card,
+                revealedCards.head,
+                revealedCardEffect
+              )
+            then enemyPush(card, enemyIndex)
+            else enemyRecursion(i + 1, gameTemp, canPush)
+          else gameTemp
+        }
+
+        val canPushFunctions = List(
+          enemies(enemyIndex).shouldPushDrawCard,
+          enemies(enemyIndex).canPushBasicCardWithSameColor,
+          enemies(enemyIndex).canPushSuspendOrDirectionChangeWithSameColor,
+          enemies(enemyIndex).canPushBasicCardWithSameValue,
+          enemies(enemyIndex).canPushSuspendOrDirectionChangeWithSameValue,
+          enemies(enemyIndex).canPushColorChange,
+          enemies(enemyIndex).canPushOnSpecial,
+          enemies(enemyIndex).canPushPlusTwo,
+          enemies(enemyIndex).canPushPlusFour
+        )
+
+        def canPushRecursion(i: Int): Game = {
+          if i < 6 || (i < canPushFunctions.length && enemies(
+              enemyIndex
+            ).enemyCards.length < 4)
+          then
+            val newGame = enemyRecursion(0, copy(), canPushFunctions(i))
+            if newGame.revealedCards.length != revealedCards.length then newGame
+            else canPushRecursion(i + 1)
+          else if !alreadyPulled then
+            enemyPull(enemyIndex).copy(
+              alreadyPulled = true,
+              revealedCardEffect = 0
+            )
+          else copy(alreadyPulled = false)
+        }
+
+        canPushRecursion(0)
+    else copy(revealedCardEffect = 0)
   }
 
-  def getLength(list: Integer): Int = {
-    // if list == 0 then init.enemy.enemyCards.length
-    // else if list == 1 then init.enemy2.enemyCards.length
-    // else if list == 2 then init.enemy3.enemyCards.length
-    // else if list == 3 then init.cardsRevealed.length
-    // else if list == 4 then init.player.handCards.length
-    // else init.cardsCovered.length
-    0
-  }
-  def getCardText(list: Int, index: Int): String = {
-    // if (list == 3 && index == 1) {
-    //   init.cardsRevealed.head.toString
-    // } else if (list == 3 && index == 2) {
-    //   "Do Step"
-    // } else if (list == 4) {
-    //   init.player.handCards(index).toString
-    // } else {
-    //   "Uno"
-    // }
-    "Test"
-  }
-  def getGuiCardText(list: Int, index: Int): String = {
-    // if (list == 3 && index == 1) {
-    //   init.cardsRevealed.head.toGuiString
-    // } else if (list == 3 && index == 2) {
-    //   "Do Step"
-    // } else if (list == 4) {
-    //   init.player.handCards(index).toGuiString
-    // } else {
-    //   "Uno"
-    // }
-    "Test"
-  }
-  def getNumOfPlayers: 2 | 3 | 4 = {
-    numOfPlayers
-  }
-
-  def nextEnemy(): Int = {
-    if (numOfPlayers == 2) { // ||(activePlayer == 0 && direction) ||(numOfPlayers == 3 && activePlayer == 2)||(numOfPlayers == 4 && activePlayer == 2 && direction)
-      1
-    } else if ((numOfPlayers == 3)) {
-      if (activePlayer == 0) {
-        if (direction) {
-          1
-        } else {
-          2
-        }
-      } else if (activePlayer == 1) {
-        2
-      } else {
-        1
-      }
-    } else {
-      if (activePlayer == 0) {
-        if (direction) {
-          1
-        } else {
-          3
-        }
-      } else if (activePlayer == 1) {
-        2
-      } else if (activePlayer == 2) {
-        if (direction) {
-          3
-        } else {
-          1
-        }
-      } else {
-        2
-      }
+  def ki(
+      enemyIndex: Int
+  ): Game = {
+    @tailrec
+    def kiRecursion1(i: Int): Int = {
+      if i < enemies(enemyIndex).enemyCards.length then
+        if enemies(enemyIndex).canPushPlusFour(
+            enemies(enemyIndex).enemyCards(i),
+            revealedCards.head,
+            revealedCardEffect
+          )
+        then i
+        else kiRecursion1(i + 1)
+      else -1
     }
+    @tailrec
+    def kiRecursion2(i: Int): Int = {
+      if i < enemies(enemyIndex).enemyCards.length then
+        if enemies(enemyIndex).canPushPlusTwo(
+            enemies(enemyIndex).enemyCards(i),
+            revealedCards.head,
+            revealedCardEffect
+          )
+        then i
+        else kiRecursion2(i + 1)
+      else -1
+    }
+    @tailrec
+    def kiRecursion3(i: Int): Int = {
+      if i < enemies(enemyIndex).enemyCards.length then
+        if (enemies(enemyIndex).enemyCards(i).value == Value.Suspend || enemies(
+            enemyIndex
+          ).enemyCards(
+            i
+          ).value == Value.DirectionChange) && revealedCardEffect <= 0 &&
+          (enemies(enemyIndex)
+            .enemyCards(i)
+            .value == revealedCards.head.value || enemies(enemyIndex)
+            .enemyCards(
+              i
+            )
+            .color == revealedCards.head.color)
+        then i
+        else kiRecursion3(i + 1)
+      else -1
+    }
+    val index1 = kiRecursion1(0)
+    val index =
+      if index1 != -1 then index1
+      else if kiRecursion2(0) != -1 then kiRecursion2(0)
+      else kiRecursion3(0)
+    if index != -1 then
+      enemyPush(enemies(enemyIndex).enemyCards(index), enemyIndex)
+    else enemy(enemyIndex, false)
   }
-  def nextTurn(): Boolean = {
-    if (
-      (activePlayer == 1 && (!direction || numOfPlayers == 2)) ||
+
+  def enemyPush(card: Card, enemyIndex: Int): Game = {
+    def enemyPushRecursion(
+        i: Int,
+        maxColorCounter: Int,
+        color: Color
+    ): Color = {
+      if i < 4 then
+        def enemyPushInnerRecursion(j: Int, colorCounter: Int): Int = {
+          if j < enemies(enemyIndex).enemyCards.length then
+            if enemies(enemyIndex).enemyCards(j).color == Color.fromOrdinal(i)
+            then enemyPushInnerRecursion(j + 1, colorCounter + 1)
+            else enemyPushInnerRecursion(j + 1, colorCounter)
+          else colorCounter
+        }
+
+        val colorCounter = enemyPushInnerRecursion(0, 0)
+
+        if colorCounter > maxColorCounter then
+          enemyPushRecursion(i + 1, colorCounter, Color.fromOrdinal(i))
+        else enemyPushRecursion(i + 1, maxColorCounter, color)
+      else color
+    }
+    val coloredCard =
+      if card.color == Color.Special then
+        Card(enemyPushRecursion(0, 0, Color.fromOrdinal(0)), card.value)
+      else card
+
+    val revealedCardEffectNew = card.value match
+      case Value.Suspend  => -1
+      case Value.PlusTwo  => revealedCardEffect + 2
+      case Value.PlusFour => revealedCardEffect + 4
+      case _              => 0
+
+    copy(
+      revealedCards = coloredCard :: revealedCards,
+      revealedCardEffect = revealedCardEffectNew,
+      direction =
+        if card.value == Value.DirectionChange then !direction
+        else direction,
+      alreadyPulled = false,
+      enemies = enemies.updated(enemyIndex, enemies(enemyIndex).pushCard(card))
+    )
+  }
+
+  def enemyPull(enemyIndex: Int): Game = {
+    if revealedCardEffect != -1 then
+      if !alreadyPulled then
+
+        def enemyPullRecursion(
+            i: Int,
+            enemyTemp: Enemy,
+            coveredCardsTemp: List[Card]
+        ): Game = {
+          if i < revealedCardEffect then
+            enemyPullRecursion(
+              i + 1,
+              enemyTemp.pullCard(coveredCardsTemp.head),
+              coveredCardsTemp.tail
+            )
+          else if revealedCardEffect == 0 && i == 0 then
+            copy(
+              enemies = enemies
+                .updated(enemyIndex, enemyTemp.pullCard(coveredCardsTemp.head)),
+              coveredCards = coveredCardsTemp.tail,
+              alreadyPulled = true
+            )
+          else
+            copy(
+              enemies = enemies.updated(enemyIndex, enemyTemp),
+              coveredCards = coveredCardsTemp,
+              alreadyPulled = false
+            )
+        }
+
+        enemyPullRecursion(0, enemies(enemyIndex), coveredCards)
+          .copy(revealedCardEffect = 0)
+      else copy(alreadyPulled = false, revealedCardEffect = 0)
+    else setActivePlayer().copy(revealedCardEffect = 0)
+  }
+
+  def getLength(list: Integer): Int =
+    list match
+      case 0 | 1 | 2 => enemies(list).enemyCards.length
+      case 3         => revealedCards.length
+      case 4         => player.handCards.length
+      case _         => coveredCards.length
+
+  def getCardText(list: Int, index: Int): String =
+    if list == 3 && index == 1 then revealedCards.head.toString
+    else if list == 3 && index == 2 then "Do Step"
+    else if list == 4 then player.handCards(index).toString
+    else "Uno"
+
+  def getGuiCardText(list: Int, index: Int): String =
+    if list == 3 && index == 1 then revealedCards.head.toGuiString
+    else if list == 3 && index == 2 then "Do Step"
+    else if list == 4 then player.handCards(index).toGuiString
+    else "Uno"
+
+  def getNumOfPlayers: 2 | 3 | 4 = numOfPlayers
+
+  def nextEnemy(): Int =
+    if numOfPlayers == 2 || (activePlayer == 0 && direction) || (activePlayer == 2 && !direction)
+    then 1
+    else if (numOfPlayers >= 3 && activePlayer == 1 && direction) || (numOfPlayers == 3 && activePlayer == 0 && !direction) || (activePlayer == 3 && !direction)
+    then 2
+    else 3
+
+  def nextTurn(): Boolean =
+    (activePlayer == 1 && (!direction || numOfPlayers == 2)) ||
       (activePlayer == 2 && direction && numOfPlayers == 3) || (activePlayer == 3 && direction && numOfPlayers == 4)
-    ) {
-      true
-    } else {
-      false
-    }
-  }
-  def getNextEnemy(): Enemy = {
-    // val i = nextEnemy()
-    // if (i == 1) {
-    //   init.enemy
-    // } else if (i == 2) {
-    //   init.enemy2
-    // } else {
-    //   init.enemy3
-    // }
-    Enemy(List())
-  }
 
-  def setActivePlayer(): Game = {
-    // if (nextTurn()) {
-    //   activePlayer = 0
-    // } else {
-    //   activePlayer = nextEnemy()
-    // }
-    this
-  }
-  def setDirection(): Game = {
-    // direction = !direction
-    this
-  }
-  def setAnotherPull(b: Boolean = false): Game = {
-    // alreadyPulled = b
-    this
-  }
+  def setActivePlayer(): Game = if nextTurn() then copy(activePlayer = 0)
+  else copy(activePlayer = nextEnemy())
+
+  def setDirection(): Game = copy(direction = !direction)
+
+  def setAnotherPull(b: Boolean = false): Game = copy(alreadyPulled = b)
 
   def getActivePlayer: Int = activePlayer
+
   def getDirection: Boolean = direction
+
   def getAnotherPull: Boolean = alreadyPulled
 
-  def getAllCards(list: Int, index: Int): String = {
-    // if (list == 0)
-    //   init.enemy.enemyCards(index).toString
-    // else if (list == 1)
-    //   init.enemy2.enemyCards(index).toString
-    // else if (list == 2)
-    //   init.enemy3.enemyCards(index).toString
-    // else if (list == 3)
-    //   init.cardsRevealed(index).toString
-    // else if (list == 4)
-    //   init.player.handCards(index).toString
-    // else
-    //   init.cardsCovered(index).toString
-    "Test"
-  }
+  def getAllCards(list: Int, index: Int): String =
+    list match
+      case 0 => enemies(0).enemyCards(index).toString
+      case 1 => enemies(1).enemyCards(index).toString
+      case 2 => enemies(2).enemyCards(index).toString
+      case 3 => revealedCards(index).toString
+      case 4 => player.handCards(index).toString
+      case _ => coveredCards(index).toString
 
-  def setAllCards(list: Int, card: Card): Game = {
-    // if (list == 0)
-    //   init.enemy = init.enemy.pushCard(card)
-    // else if (list == 1)
-    //   init.enemy2 = init.enemy2.pushCard(card)
-    // else if (list == 2)
-    //   init.enemy3 = init.enemy3.pushCard(card)
-    // else if (list == 3)
-    //   init.cardsRevealed = init.cardsRevealed :+ card
-    // else if (list == 4)
-    //   init.player = init.player.pushCard(card)
-    // else
-    //   init.cardsCovered = init.cardsCovered :+ card
-    this
-  }
+  def setAllCards(list: Int, card: Card): Game =
+    list match
+      case 0 =>
+        copy(enemies = List(enemies(0).pushCard(card), enemies(1), enemies(2)))
+      case 1 =>
+        copy(enemies = List(enemies(0), enemies(1).pushCard(card), enemies(2)))
+      case 2 =>
+        copy(enemies = List(enemies(0), enemies(1), enemies(2).pushCard(card)))
+      case 3 => copy(revealedCards = revealedCards :+ card)
+      case 4 => copy(player = player.pushCard(card))
+      case _ => copy(coveredCards = coveredCards :+ card)
 
-  def clearAllLists(): Game = {
-    // init.enemy = Enemy(List[Card]())
-    // init.enemy2 = Enemy(List[Card]())
-    // init.enemy3 = Enemy(List[Card]())
-    // init.player = Player(List[Card]())
-    // init.cardsCovered = new ListBuffer[Card]()
-    // init.cardsRevealed = new ListBuffer[Card]()
-    // revealedCardEffect = 0
-    this
-  }
+  def clearAllLists(): Game =
+    copy(
+      enemies = List.fill(3)(Enemy()),
+      player = Player(),
+      coveredCards = List(),
+      revealedCards = List(),
+      revealedCardEffect = 0
+    )
 
-  def getSpecialTop: Int = {
-    revealedCardEffect
-  }
+  def getRevealedCardEffect: Int = revealedCardEffect
 
-  def setRevealedCardEffect(io: Int): Game = {
-    // revealedCardEffect = io
-    this
-  }
+  def setRevealedCardEffect(io: Int): Game = copy(revealedCardEffect = io)
 
-  def shuffle(): Game = {
-    // var cards = init.cardsCovered ++ init.cardsRevealed.drop(1)
-    // var n = cards.length
-    // for (_ <- cards.indices) {
-    //   val r = new scala.util.Random
-    //   val p = 1 + r.nextInt(n)
-    //   init.cardsCovered = cards(p - 1) +: init.cardsCovered
-    //   cards = cards.take(p - 1) ++ cards.drop(p)
-    //   n -= 1
-    // }
-    // init.cardsRevealed = init.cardsRevealed.take(1)
-    this
-  }
+  def shuffle(): Game =
+    copy(
+      coveredCards = Random.shuffle(coveredCards ::: revealedCards.tail),
+      revealedCards = List(revealedCards.head)
+    )
 
   override def toString: String = {
-    //   val a = "┌-------┐  "
-    //   val b = "|       |  "
-    //   val c = "|  Uno  |  "
-    //   val d = "└-------┘  "
-    //   var e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x = ""
+    val cardTop = "┌-------┐  " // a
+    val cardEmpty = "|       |  " // b
+    val coveredCard = "|  Uno  |  " // c
+    val cardBottom = "└-------┘  " // d
 
-    //   for (_ <- 1 to init.enemy.enemyCards.length) {
-    //     e = e.concat(a)
-    //     f = f.concat(b)
-    //     g = g.concat(c)
-    //     h = h.concat(d)
-    //   }
-    //   for (i <- 1 to init.player.handCards.length) {
-    //     m = m.concat(a)
-    //     n = n.concat(b)
-    //     o = o.concat("|  " + init.player.handCards(i - 1).toString + "  |  ")
-    //     p = p.concat(d)
-    //   }
-    //   i = i.concat(a).concat("           ┌-------┐") + "\n"
-    //   j = j.concat(b).concat("           |       |") + "\n"
-    //   k = k
-    //     .concat(c)
-    //     .concat(
-    //       "           |  " + init.cardsRevealed.head.toString + "  |"
-    //     ) + "\n"
-    //   l = l.concat(d).concat("           └-------┘") + "\n\n"
+    def enemy1CardsRecursion(i: Int, enemyList: List[String]): List[String] = {
+      if i < enemies(0).enemyCards.length then
+        enemy1CardsRecursion(
+          i + 1,
+          List(
+            enemyList(0) + cardTop,
+            enemyList(1) + cardEmpty,
+            enemyList(2) + coveredCard,
+            enemyList(3) + cardBottom
+          )
+        )
+      else enemyList
+    }
 
-    //   if (numOfPlayers >= 3) {
-    //     for (_ <- 1 to init.enemy2.enemyCards.length) {
-    //       q = q.concat(a)
-    //       r = r.concat(b)
-    //       s = s.concat(c)
-    //       t = t.concat(d)
-    //     }
-    //     if (numOfPlayers == 4) {
-    //       for (_ <- 1 to init.enemy3.enemyCards.length) {
-    //         u = u.concat(a)
-    //         v = v.concat(b)
-    //         w = w.concat(c)
-    //         x = x.concat(d)
-    //       }
-    //     }
-    //   }
+    val enemy1Cards =
+      enemy1CardsRecursion(0, List("", "", "", "")) // e, f, g, h
 
-    //   val playingField = e + "\t\t\t\t\t" + q + "\n" +
-    //     f + "\t\t\t\t\t" + r + "\n" +
-    //     g + "\t\t\t\t\t" + s + "\n" +
-    //     f + "\t\t\t\t\t" + r + "\n" +
-    //     h + "\t\t\t\t\t" + t + "\n\n" +
-    //     i + j + k + j + l +
-    //     m + "\t\t\t\t\t" + u + "\n" +
-    //     n + "\t\t\t\t\t" + v + "\n" +
-    //     o + "\t\t\t\t\t" + w + "\n" +
-    //     n + "\t\t\t\t\t" + v + "\n" +
-    //     p + "\t\t\t\t\t" + x
-    //   playingField
-    "Test"
+    def playerCardsRecursion(i: Int, playerList: List[String]): List[String] = {
+      if i < player.handCards.length then
+        playerCardsRecursion(
+          i + 1,
+          List(
+            playerList(0) + cardTop,
+            playerList(1) + cardEmpty,
+            playerList(2) +
+              "|  " + player.handCards(i).toString + "  |  ",
+            playerList(3) + cardBottom
+          )
+        )
+      else playerList
+    }
+
+    val playerCards =
+      playerCardsRecursion(0, List("", "", "", "")) // m, n, o, p
+
+    val centerCardsTop = cardTop + "           ┌-------┐" + "\n" // i
+    val centerCardsEmpty = cardEmpty + "           |       |" + "\n" // j
+    val centerCardsText =
+      coveredCard + "           |  " + revealedCards.head.toString + "  |" + "\n" // k
+    val centerCardsBottom = cardBottom + "           └-------┘" + "\n" // l
+
+    val enemy2Cards = if numOfPlayers >= 3 then
+      def enemy2CardsRecursion(
+          i: Int,
+          enemyList: List[String]
+      ): List[String] = {
+        if i < enemies(1).enemyCards.length then
+          enemy2CardsRecursion(
+            i + 1,
+            List(
+              enemyList(0) + cardTop,
+              enemyList(1) + cardEmpty,
+              enemyList(2) + coveredCard,
+              enemyList(3) + cardBottom
+            )
+          )
+        else enemyList
+      }
+      enemy2CardsRecursion(0, List("", "", "", ""))
+    else List("", "", "", "") // q, r, s, t
+
+    val enemy3Cards = if numOfPlayers >= 4 then
+      def enemy3CardsRecursion(
+          i: Int,
+          enemyList: List[String]
+      ): List[String] = {
+        if i < enemies(2).enemyCards.length then
+          enemy3CardsRecursion(
+            i + 1,
+            List(
+              enemyList(0) + cardTop,
+              enemyList(1) + cardEmpty,
+              enemyList(2) + coveredCard,
+              enemyList(3) + cardBottom
+            )
+          )
+        else enemyList
+      }
+      enemy3CardsRecursion(0, List("", "", "", ""))
+    else List("", "", "", "") // u, v, w, x
+
+    enemy1Cards(0) + "\t\t\t\t\t" + enemy2Cards(0) + "\n" +
+      enemy1Cards(1) + "\t\t\t\t\t" + enemy2Cards(1) + "\n" +
+      enemy1Cards(2) + "\t\t\t\t\t" + enemy2Cards(2) + "\n" +
+      enemy1Cards(1) + "\t\t\t\t\t" + enemy2Cards(1) + "\n" +
+      enemy1Cards(3) + "\t\t\t\t\t" + enemy2Cards(3) + "\n\n" +
+      centerCardsTop + centerCardsEmpty + centerCardsText + centerCardsEmpty + centerCardsBottom +
+      playerCards(0) + "\t\t\t\t\t" + enemy3Cards(0) + "\n" +
+      playerCards(1) + "\t\t\t\t\t" + enemy3Cards(1) + "\n" +
+      playerCards(2) + "\t\t\t\t\t" + enemy3Cards(2) + "\n" +
+      playerCards(1) + "\t\t\t\t\t" + enemy3Cards(1) + "\n" +
+      playerCards(3) + "\t\t\t\t\t" + enemy3Cards(3)
   }
 }

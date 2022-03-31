@@ -58,8 +58,8 @@ class FileIO extends FileIOInterface {
 
     game = game.clearAllLists()
 
-    // val specialTop = (json \ "game" \ "specialCard").get.toString.toInt
-    // game = game.setSpecialTop(specialTop)
+    val specialTop = (json \ "game" \ "specialCard").get.toString.toInt
+    game = game.setRevealedCardEffect(specialTop)
 
     def createCardLists(listName: String, listIndex: Int): GameInterface = {
       val list = (json \ "game" \ listName).as[List[String]]
@@ -104,7 +104,7 @@ class FileIO extends FileIOInterface {
         "activePlayer" -> JsNumber(game.getActivePlayer),
         "direction" -> JsBoolean(game.getDirection),
         "anotherPull" -> JsBoolean(game.getAnotherPull),
-        "specialCard" -> JsNumber(game.getSpecialTop),
+        "specialCard" -> JsNumber(game.getRevealedCardEffect),
         "enemy1Cards" -> JsArray(
           for cardNumber <- 0 until game.getLength(0)
           yield JsString(game.getAllCards(0, cardNumber))

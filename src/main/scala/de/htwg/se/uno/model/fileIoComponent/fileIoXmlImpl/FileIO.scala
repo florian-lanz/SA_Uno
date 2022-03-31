@@ -57,8 +57,8 @@ class FileIO extends FileIOInterface {
 
     game = game.clearAllLists()
 
-    // val specialTop = (file \\ "game" \ "@specialTop").text.toInt
-    // game = game.setSpecialTop(specialTop)
+    val specialTop = (file \\ "game" \ "@specialTop").text.toInt
+    game = game.setRevealedCardEffect(specialTop)
 
     val listLength = (file \\ "length")
     var lengths = new ListBuffer[Int]()
@@ -109,7 +109,7 @@ class FileIO extends FileIOInterface {
       activePlayer={game.getActivePlayer.toString}
       direction={game.getDirection.toString}
       anotherPull={game.getAnotherPull.toString}
-      specialTop={game.getSpecialTop.toString}
+      specialTop={game.getRevealedCardEffect.toString}
     >
       <cardLists>
         {
