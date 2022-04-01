@@ -12,15 +12,15 @@ class PullCommandSpec extends AnyWordSpec with Matchers {
       controller.createTestGame()
       val command = new PullCommand(controller)
       "Be able to do a Step" in {
-        command.doStep
+        command.doStep()
         controller.game.getLength(4) should be (10)
       }
       "Be able to undo a Step" in {
-        command.undoStep
+        command.undoStep()
         controller.game.getLength(4) should be (9)
       }
       "Be able to redo a Step" in {
-        command.redoStep
+        command.redoStep()
         controller.game.getLength(4) should be (10)
       }
     }

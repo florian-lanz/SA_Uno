@@ -14,15 +14,15 @@ class ShuffleCommandSpec extends AnyWordSpec with Matchers {
       "Be able to do a Step" in {
         controller.set("R 1")
         controller.game.getLength(3) should be(2)
-        command.doStep
+        command.doStep()
         controller.game.getLength(3) should be(1)
       }
       "Be able to undo a Step" in {
-        command.undoStep
+        command.undoStep()
         controller.game.getLength(3) should be(2)
       }
       "Be able to redo a Step" in {
-        command.redoStep
+        command.redoStep()
         controller.game.getLength(3) should be(1)
       }
     }
