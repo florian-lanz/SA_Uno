@@ -2,7 +2,7 @@ package de.htwg.se.uno.model.gameComponent
 
 import de.htwg.se.uno.model.gameComponent.gameBaseImpl.{Card, Game}
 
-trait GameInterface {
+trait GameInterface:
   def toString: String
   def createTestGame(): Game
   def enemy(enemyIndex: Int, kiNeeded: Boolean = true): Game
@@ -27,4 +27,4 @@ trait GameInterface {
   def getRevealedCardEffect: Int
   def shuffle(): Game
   def setRevealedCardEffect(io: Int): Game
-}
+  def reverseList(list: Int): Game

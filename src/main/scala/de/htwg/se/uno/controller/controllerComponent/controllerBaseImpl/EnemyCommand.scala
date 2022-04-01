@@ -2,27 +2,8 @@ package de.htwg.se.uno.controller.controllerComponent.controllerBaseImpl
 
 import de.htwg.se.uno.util.Command
 
-class EnemyCommand(controller: Controller, enemyIndex: Int) extends Command {
-  override def doStep: Unit = {
-    controller.undoList = controller.fileIo
-      .gameToJson(controller.game)
-      .toString :: controller.undoList
+class EnemyCommand(controller: Controller, enemyIndex: Int) extends Command(controller):
+  override def doStep(): Unit =
+    controller.undoList = controller.fileIo.gameToJson(controller.game).toString :: controller.undoList
+    println(controller.undoList)
     controller.game = controller.game.enemy(enemyIndex)
-  }
-
-  override def undoStep: Unit = {
-    controller.redoList = controller.fileIo
-      .gameToJson(controller.game)
-      .toString :: controller.redoList
-    controller.game = controller.fileIo.load(controller.undoList.head)
-    controller.undoList = controller.undoList.tail
-  }
-
-  override def redoStep: Unit = {
-    controller.undoList = controller.fileIo
-      .gameToJson(controller.game)
-      .toString :: controller.undoList
-    controller.game = controller.fileIo.load(controller.redoList.head)
-    controller.redoList = controller.redoList.tail
-  }
-}

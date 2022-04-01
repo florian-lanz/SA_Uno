@@ -5,45 +5,30 @@ import com.google.inject.name.Names
 import de.htwg.se.uno.UnoModule
 import de.htwg.se.uno.model.gameComponent.gameBaseImpl
 import de.htwg.se.uno.model.fileIoComponent.FileIOInterface
-import de.htwg.se.uno.model.gameComponent.gameBaseImpl.{Card, Color, Value}
+import de.htwg.se.uno.model.gameComponent.gameBaseImpl.{Card, CardStack, Color, Value}
 import de.htwg.se.uno.model.gameComponent.GameInterface
-import de.htwg.se.uno.model.gameComponent.gameBaseImpl.Color
 import play.api.libs.json.{JsValue, Json}
 
 import scala.collection.mutable.ListBuffer
 import scala.xml.{Node, PrettyPrinter}
 
-class FileIO extends FileIOInterface {
-  override def load(source: String = "game.xml"): GameInterface = {
+class FileIO extends FileIOInterface:
+  override def load(source: String = "game.xml"): GameInterface =
     var game: GameInterface = null
     val file = scala.xml.XML.loadFile(source)
     val injector = Guice.createInjector(new UnoModule)
 
     val numOfPlayers = (file \\ "game" \\ "@numOfPlayers").text.toInt
-    numOfPlayers match {
-      case 2 =>
-        game = injector.getInstance(
-          Key.get(classOf[GameInterface], Names.named("2 Players"))
-        )
-      case 3 =>
-        game = injector.getInstance(
-          Key.get(classOf[GameInterface], Names.named("3 Players"))
-        )
-      case 4 =>
-        game = injector.getInstance(
-          Key.get(classOf[GameInterface], Names.named("4 Players"))
-        )
-    }
+    numOfPlayers match
+      case 2 => game = injector.getInstance(Key.get(classOf[GameInterface], Names.named("2 Players")))
+      case 3 => game = injector.getInstance(Key.get(classOf[GameInterface], Names.named("3 Players")))
+      case 4 => game = injector.getInstance(Key.get(classOf[GameInterface], Names.named("4 Players")))
 
     val activePlayer = (file \\ "game" \ "@activePlayer").text.toInt
-    while (activePlayer != game.getActivePlayer) {
-      game = game.setActivePlayer()
-    }
+    while activePlayer != game.getActivePlayer do game = game.setActivePlayer()
 
     val direction = (file \\ "game" \ "@direction").text.toBoolean
-    if (direction != game.getDirection) {
-      game = game.setDirection()
-    }
+    if direction != game.getDirection then game = game.setDirection()
 
     val anotherPull = (file \\ "game" \ "@anotherPull").text.toBoolean
     game = game.setAnotherPull(anotherPull)
@@ -86,24 +71,23 @@ class FileIO extends FileIOInterface {
       }
       i += 1
     }
+    for i <- 0 until 6 do game = game.reverseList(i)
 
     game
-  }
 
   override def save(game: GameInterface): Unit = saveString(game)
 
-  def saveString(game: GameInterface): Unit = {
+  def saveString(game: GameInterface): Unit =
     import java.io._
     val pw = new PrintWriter(new File("game.xml"))
     val prettyPrinter = new PrettyPrinter(120, 4)
     val xml = prettyPrinter.format(gameToXml(game))
     pw.write(xml)
     pw.close()
-  }
 
   override def gameToJson(game: GameInterface): JsValue = Json.obj()
 
-  def gameToXml(game: GameInterface): Node = {
+  def gameToXml(game: GameInterface): Node =
     <game
       numOfPlayers={game.getNumOfPlayers.toString}
       activePlayer={game.getActivePlayer.toString}
@@ -131,5 +115,3 @@ class FileIO extends FileIOInterface {
     }
       </listLengths>
     </game>
-  }
-}

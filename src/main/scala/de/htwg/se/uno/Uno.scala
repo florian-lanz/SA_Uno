@@ -11,8 +11,7 @@ import scala.io.StdIn.readLine
 
 @main def main(): Unit =
   val injector: Injector = Guice.createInjector(new UnoModule)
-  val controller: ControllerInterface =
-    injector.getInstance(classOf[ControllerInterface])
+  val controller: ControllerInterface = injector.getInstance(classOf[ControllerInterface])
   val tui = new Tui(controller)
   val gui = new SwingGui(controller)
   controller.publish(new GameSizeChanged())
