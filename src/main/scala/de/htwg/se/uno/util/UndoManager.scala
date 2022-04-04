@@ -9,14 +9,13 @@ class UndoManager:
     redoStack = Nil
     command.doStep()
 
-  def undoStep(): Boolean =
+  def undoStep(): Unit =
     undoStack match {
-      case Nil => false
+      case Nil =>
       case head::stack =>
         head.undoStep()
         undoStack=stack
         redoStack= head::redoStack
-        true
     }
 
   def redoStep(): Unit =
