@@ -36,6 +36,8 @@ class Controller @Inject() (var game: GameInterface) extends ControllerInterface
   def initialize(): Unit =
     savedSpecialCard = ""
     undoManager = new UndoManager
+    undoList = List()
+    redoList = List()
     controllerEvent("yourTurn")
     publish(new GameSizeChanged)
 
@@ -43,6 +45,7 @@ class Controller @Inject() (var game: GameInterface) extends ControllerInterface
     if string.charAt(0) != 'S' || color != 0 then
       if game.nextTurn() then
         val s = gameToString
+        undoList = fileIo.gameToJson(game).toString :: undoList
         game = game.setActivePlayer()
         undoManager.doStep(new PushCommand(string, color, this))
         if !s.equals(gameToString) then
@@ -67,6 +70,7 @@ class Controller @Inject() (var game: GameInterface) extends ControllerInterface
   def get(): Unit =
     if game.nextTurn() then
       val b = game.getAnotherPull
+      undoList = fileIo.gameToJson(game).toString :: undoList
       game = game.setActivePlayer()
       val activePlayer = game.getActivePlayer
       undoManager.doStep(new PullCommand(this))
@@ -92,6 +96,7 @@ class Controller @Inject() (var game: GameInterface) extends ControllerInterface
 
   def enemy(): Unit =
     val enemyIndex = game.nextEnemy() - 1
+    undoList = fileIo.gameToJson(game).toString :: undoList
     game = game.setActivePlayer()
     undoManager.doStep(EnemyCommand(this, enemyIndex))
     if game.nextTurn() then controllerEvent("yourTurn")
@@ -109,10 +114,6 @@ class Controller @Inject() (var game: GameInterface) extends ControllerInterface
     var undo = true
     undoManager.undoStep()
     while !game.nextTurn() && undo do undo = undoManager.undoStep()
-    while !game.nextTurn() do
-      game = game.setDirection()
-      game = game.setActivePlayer()
-      game = game.setDirection()
     controllerEvent("undo")
     publish(new GameChanged)
     won()
@@ -154,6 +155,7 @@ class Controller @Inject() (var game: GameInterface) extends ControllerInterface
 
   def shuffle(): Unit =
     if game.getLength(5) <= 16 then
+      undoList = fileIo.gameToJson(game).toString :: undoList
       undoManager.doStep(new ShuffleCommand(this))
       controllerEvent("shuffled")
       publish(new GameChanged)
