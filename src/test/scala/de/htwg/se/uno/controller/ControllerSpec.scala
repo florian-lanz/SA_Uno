@@ -1,7 +1,7 @@
 package de.htwg.se.uno.controller
 
 import de.htwg.se.uno.controller.controllerComponent.controllerBaseImpl.Controller
-import de.htwg.se.uno.model.gameComponent.gameBaseImpl.Game
+import de.htwg.se.uno.model.gameComponent.gameBaseImpl._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
@@ -101,7 +101,7 @@ class ControllerSpec extends AnyWordSpec with Matchers {
         controller.controllerEvent("idle") should be(controller.controllerEvent("undo"))
       }
       "Not Pull a Card if the player has to suspend" in {
-        controller.game.setRevealedCardEffect(-1)
+        controller.game = controller.game.setRevealedCardEffect(-1)
         controller.get()
         controller.controllerEvent("idle") should be(controller.controllerEvent("pullCardNotAllowed"))
       }
@@ -119,11 +119,12 @@ class ControllerSpec extends AnyWordSpec with Matchers {
         controller.controllerEvent("idle") should be(controller.controllerEvent("redo"))
       }
 
-//      "Should be able to check if the enemy 1 has won" in {
-//        controller.game.setLength(1)
-//        controller.won()
-//        controller.controllerEvent("idle") should be(controller.controllerEvent("lost"))
-//      }
+      "Should be able to check if the enemy 1 has won" in {
+        val gameTest = Game(numOfPlayers = 2, enemies = List(Enemy(), Enemy(), Enemy()), player = Player(List(Card(Color.Blue, Value.Zero))))
+        val controllerTest = new Controller(gameTest)
+        controllerTest.won()
+        controllerTest.controllerEvent("idle") should be(controllerTest.controllerEvent("lost"))
+      }
 //      "Should be able to check if the player has won" in {
 //        controller.game.setLength(4)
 //        controller.won()

@@ -26,3 +26,13 @@ project/.sbtserver
 
 # Intellij
 /.idea/
+
+# VS Code & Metals
+/.ammonite/
+/.bloop/
+/.scalafmt.conf
+/.metals/
+/.vscode/
+/null/
+/project/.bloop
+/project/metals.sbt
