@@ -5,12 +5,7 @@ import com.google.inject.name.Names
 import de.htwg.se.uno.UnoModule
 import de.htwg.se.uno.model.gameComponent.gameBaseImpl
 import de.htwg.se.uno.model.fileIoComponent.FileIOInterface
-import de.htwg.se.uno.model.gameComponent.gameBaseImpl.{
-  Card,
-  CardStack,
-  Color,
-  Value
-}
+import de.htwg.se.uno.model.gameComponent.gameBaseImpl._
 import de.htwg.se.uno.model.gameComponent.GameInterface
 import play.api.libs.json.*
 
@@ -24,10 +19,8 @@ class FileIO extends FileIOInterface:
     val injector = Guice.createInjector(new UnoModule)
 
     val numOfPlayers = (json \ "game" \ "numOfPlayers").get.toString.toInt
-    var game: GameInterface = numOfPlayers match
-      case 2 => injector.getInstance(Key.get(classOf[GameInterface], Names.named("2 Players")))
-      case 3 => injector.getInstance(Key.get(classOf[GameInterface], Names.named("3 Players")))
-      case 4 => injector.getInstance(Key.get(classOf[GameInterface], Names.named("4 Players")))
+    var game = injector.getInstance(Key.get(classOf[GameInterface], Names.named(numOfPlayers + " Players")))
+
 
     val activePlayer = (json \ "game" \ "activePlayer").get.toString.toInt
     while activePlayer != game.getActivePlayer do game = game.setActivePlayer()
@@ -75,17 +68,17 @@ class FileIO extends FileIOInterface:
   def gameToJson(game: GameInterface): JsValue =
     Json.obj(
       "game" -> Json.obj(
-        "numOfPlayers" -> JsNumber(game.getNumOfPlayers),
-        "activePlayer" -> JsNumber(game.getActivePlayer),
-        "direction" -> JsBoolean(game.getDirection),
-        "anotherPull" -> JsBoolean(game.getAnotherPull),
-        "specialCard" -> JsNumber(game.getRevealedCardEffect),
-        "enemy1Cards" -> JsArray(for cardNumber <- 0 until game.getLength(0) yield JsString(game.getAllCards(0, cardNumber))),
-        "enemy2Cards" -> JsArray(for cardNumber <- 0 until game.getLength(1) yield JsString(game.getAllCards(1, cardNumber))),
-        "enemy3Cards" -> JsArray(for cardNumber <- 0 until game.getLength(2) yield JsString(game.getAllCards(2, cardNumber))),
-        "openCardStack" -> JsArray(for cardNumber <- 0 until game.getLength(3) yield JsString(game.getAllCards(3, cardNumber))),
-        "playerCards" -> JsArray(for cardNumber <- 0 until game.getLength(4) yield JsString(game.getAllCards(4, cardNumber))),
-        "coveredCardStack" -> JsArray(for cardNumber <- 0 until game.getLength(5) yield JsString(game.getAllCards(5, cardNumber)))
+        "numOfPlayers" -> JsNumber(game.numOfPlayers),
+        "activePlayer" -> JsNumber(game.activePlayer),
+        "direction" -> JsBoolean(game.direction),
+        "anotherPull" -> JsBoolean(game.alreadyPulled),
+        "specialCard" -> JsNumber(game.revealedCardEffect),
+        "enemy1Cards" -> JsArray(for cardNumber <- game.enemies.head.enemyCards.indices yield JsString(game.enemies.head.enemyCards(cardNumber).toString)),
+        "enemy2Cards" -> JsArray(for cardNumber <- game.enemies(1).enemyCards.indices yield JsString(game.enemies(1).enemyCards(cardNumber).toString)),
+        "enemy3Cards" -> JsArray(for cardNumber <- game.enemies(2).enemyCards.indices yield JsString(game.enemies(2).enemyCards(cardNumber).toString)),
+        "openCardStack" -> JsArray(for cardNumber <- game.revealedCards.indices yield JsString(game.revealedCards(cardNumber).toString)),
+        "playerCards" -> JsArray(for cardNumber <- game.player.handCards.indices yield JsString(game.player.handCards(cardNumber).toString)),
+        "coveredCardStack" -> JsArray(for cardNumber <- game.coveredCards.indices yield JsString(game.coveredCards(cardNumber).toString))
       )
     )
 

@@ -76,7 +76,7 @@ case class Game @Inject() (
 
   def pushMove(string: String, color: Int): Game =
     if revealedCardEffect != -1 then
-      val cardOption = player.getCard(string)
+      val cardOption = player.findCard(string)
       if cardOption.isDefined then
         val card = cardOption.get
         if player.canPush(card, revealedCards.head, revealedCardEffect) then
@@ -286,24 +286,7 @@ case class Game @Inject() (
   def nextTurn(): Boolean =
     (activePlayer == 1 && (!direction || numOfPlayers == 2)) || (activePlayer == 2 && direction && numOfPlayers == 3) || (activePlayer == 3 && direction && numOfPlayers == 4)
 
-  def setActivePlayer(): Game = if nextTurn() then copy(activePlayer = 0) else copy(activePlayer = nextEnemy())
-
-  def setDirection(): Game = copy(direction = !direction)
-
-  def setAnotherPull(b: Boolean = false): Game = copy(alreadyPulled = b)
-
-  def getActivePlayer: Int = activePlayer
-
-  def getDirection: Boolean = direction
-
-  def getAnotherPull: Boolean = alreadyPulled
-
-  def getAllCards(list: Int, index: Int): String =
-    list match
-      case 0 | 1 | 2 => enemies(list).enemyCards(index).toString
-      case 3 => revealedCards(index).toString
-      case 4 => player.handCards(index).toString
-      case _ => coveredCards(index).toString
+  def changeActivePlayer(): Game = if nextTurn() then copy(activePlayer = 0) else copy(activePlayer = nextEnemy())
 
   def setAllCards(list: Int, card: Card): Game =
     list match

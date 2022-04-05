@@ -31,7 +31,7 @@ case class Player(handCards: List[Card] = List()):
 
   def pullCard(card: Card): Player = copy(card :: handCards)
 
-  def getCard(s: String): Option[Card] = 
+  def findCard(s: String): Option[Card] = 
     @tailrec
     def getCardRecursion(i: Int): Int = 
       if i < handCards.length then

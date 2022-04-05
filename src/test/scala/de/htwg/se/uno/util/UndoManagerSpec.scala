@@ -18,7 +18,7 @@ class UndoManagerSpec extends AnyWordSpec {
       }
       "Not be able to redo a Step" in {
         undoManager.redoStep()
-        controller.game.getActivePlayer should be(3)
+        controller.game.activePlayer should be(3)
       }
       "be able to do a Step" in {
         undoManager.doStep(command)

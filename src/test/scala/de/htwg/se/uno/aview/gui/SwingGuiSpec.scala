@@ -40,7 +40,7 @@ class SwingGuiSpec extends AnyWordSpec with Matchers {
         swingGui.variableForTests should be(1)
       }
       "Change if the activePlayer changes a sixth time" in {
-        controller.game = controller.game.setActivePlayer()
+        controller.game = controller.game.changeActivePlayer()
         controller.publish(new GameChanged)
         swingGui.variableForTests should be(2)
       }

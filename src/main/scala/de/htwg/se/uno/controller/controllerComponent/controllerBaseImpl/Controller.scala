@@ -84,9 +84,7 @@ class Controller @Inject() (var game: GameInterface) extends ControllerInterface
         game = game.setDirection()
         controllerEvent("yourTurn")
       if activePlayer != activePlayer2 then
-        game = game.setDirection()
-        game = game.setActivePlayer()
-        game = game.setDirection()
+        resetActivePlayer()
         controllerEvent("pullCardNotAllowed")
       publish(new GameChanged)
       shuffle()
@@ -101,10 +99,7 @@ class Controller @Inject() (var game: GameInterface) extends ControllerInterface
     undoManager.doStep(EnemyCommand(this, enemyIndex))
     if game.nextTurn() then controllerEvent("yourTurn")
     else controllerEvent("enemyTurn")
-    if game.getAnotherPull then
-      game = game.setDirection()
-      game = game.setActivePlayer()
-      game = game.setDirection()
+    if game.alreadyPulled then
       controllerEvent("enemyTurn")
     publish(new GameChanged)
     shuffle()
@@ -143,10 +138,10 @@ class Controller @Inject() (var game: GameInterface) extends ControllerInterface
     else if game.getLength(0) == 0 then
       controllerEvent("lost")
       publish(new GameEnded)
-    else if game.getNumOfPlayers >= 3 && game.getLength(1) == 0 then
+    else if game.numOfPlayers >= 3 && game.enemies(1).enemyCards.isEmpty then
       controllerEvent("lost")
       publish(new GameEnded)
-    else if game.getNumOfPlayers >= 4 && game.getLength(2) == 0 then
+    else if game.numOfPlayers >= 4 && game.enemies(2).enemyCards.isEmpty then
       controllerEvent("lost")
       publish(new GameEnded)
     else
@@ -161,11 +156,32 @@ class Controller @Inject() (var game: GameInterface) extends ControllerInterface
     else
       controllerEvent("idle")
 
+  def getLength(list: Int): Int =
+    list match
+      case 0 | 1 | 2 => game.enemies(list).enemyCards.length
+      case 3         => game.revealedCards.length
+      case 4         => game.player.handCards.length
+      case _         => game.coveredCards.length
+
+  def getCardText(list: Int, index: Int): String =
+    if list == 3 && index == 1 then game.revealedCards.head.toString
+    else if list == 3 && index == 2 then "Do Step"
+    else if list == 4 then game.player.handCards(index).toString
+    else "Uno"
+
+  def getGuiCardText(list: Int, index: Int): String =
+    if list == 3 && index == 1 then game.revealedCards.head.toGuiString
+    else if list == 3 && index == 2 then "Do Step"
+    else if list == 4 then game.player.handCards(index).toGuiString
+    else "Uno"
+
+  def resetActivePlayer(): Unit =
+    game = game.copyGame(direction = !game.direction)
+    game = game.changeActivePlayer()
+    game = game.copyGame(direction = !game.direction)
+
   def gameToString: String = game.toString
-  def getCardText(list: Int, index: Int): String = game.getCardText(list, index)
-  def getGuiCardText(list: Int, index: Int): String = game.getGuiCardText(list, index)
-  def getLength(list: Int): Int = game.getLength(list)
-  def getNumOfPlayers: 2 | 3 | 4 = game.getNumOfPlayers
+  def getNumOfPlayers: 2 | 3 | 4 = game.numOfPlayers
   def nextTurn(): Boolean = game.nextTurn()
   def getHs2: String = savedSpecialCard
   def nextEnemy(): Int = game.nextEnemy()

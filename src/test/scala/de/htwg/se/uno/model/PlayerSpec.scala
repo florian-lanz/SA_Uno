@@ -32,10 +32,10 @@ class PlayerSpec extends AnyWordSpec {
         player.pullCard(redZero).handCards should be (List(redZero, greenNine))
       }
       "Should be able to get a card from his hand cards" in {
-        player.getCard("G 9") should be (Some(greenNine))
+        player.findCard("G 9") should be (Some(greenNine))
       }
       "Should not be able to get a card not contained in his hand cards" in {
-        player.getCard("R 9") should be (None)
+        player.findCard("R 9") should be (None)
       }
     }
   }

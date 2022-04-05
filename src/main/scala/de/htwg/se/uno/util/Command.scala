@@ -11,6 +11,6 @@ trait Command(controller: Controller):
     controller.undoList = controller.undoList.tail
 
   def redoStep(): Unit =
-    controller.undoList = controller.fileIo.gameToJson(controller.game).toString :: controller.undoList
+    controller.undoList = controller.fileIo.gameToString(controller.game) :: controller.undoList
     controller.game = controller.fileIo.load(controller.redoList.head)
     controller.redoList = controller.redoList.tail

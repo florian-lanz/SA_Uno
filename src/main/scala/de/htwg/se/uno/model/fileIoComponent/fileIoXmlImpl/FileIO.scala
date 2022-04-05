@@ -5,24 +5,21 @@ import com.google.inject.name.Names
 import de.htwg.se.uno.UnoModule
 import de.htwg.se.uno.model.gameComponent.gameBaseImpl
 import de.htwg.se.uno.model.fileIoComponent.FileIOInterface
-import de.htwg.se.uno.model.gameComponent.gameBaseImpl.{Card, CardStack, Color, Value}
+import de.htwg.se.uno.model.gameComponent.gameBaseImpl._
 import de.htwg.se.uno.model.gameComponent.GameInterface
 import play.api.libs.json.{JsValue, Json}
 
+import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 import scala.xml.{Node, PrettyPrinter}
 
 class FileIO extends FileIOInterface:
   override def load(source: String = "game.xml"): GameInterface =
-    var game: GameInterface = null
-    val file = scala.xml.XML.loadFile(source)
+    val file = if source.equals("game.xml") then scala.xml.XML.loadFile(source) else scala.xml.XML.loadString(source)
     val injector = Guice.createInjector(new UnoModule)
 
     val numOfPlayers = (file \\ "game" \\ "@numOfPlayers").text.toInt
-    numOfPlayers match
-      case 2 => game = injector.getInstance(Key.get(classOf[GameInterface], Names.named("2 Players")))
-      case 3 => game = injector.getInstance(Key.get(classOf[GameInterface], Names.named("3 Players")))
-      case 4 => game = injector.getInstance(Key.get(classOf[GameInterface], Names.named("4 Players")))
+    var game = injector.getInstance(Key.get(classOf[GameInterface], Names.named(numOfPlayers + " Players")))
 
     val activePlayer = (file \\ "game" \ "@activePlayer").text.toInt
     while activePlayer != game.getActivePlayer do game = game.setActivePlayer()
@@ -33,45 +30,41 @@ class FileIO extends FileIOInterface:
     val anotherPull = (file \\ "game" \ "@anotherPull").text.toBoolean
     game = game.setAnotherPull(anotherPull)
 
-    var cards = new ListBuffer[Card]()
-    for (color <- Color.values) {
-      for (value <- Value.values) {
-        cards += gameBaseImpl.Card(color, value)
-      }
-    }
-
-    game = game.clearAllLists()
-
     val specialTop = (file \\ "game" \ "@specialTop").text.toInt
-    game = game.setRevealedCardEffect(specialTop)
+    game = game.copyGame(revealedCardEffect = specialTop)
 
-    val listLength = (file \\ "length")
-    var lengths = new ListBuffer[Int]()
-    for (length <- listLength) {
-      val l = (length \ "@length").text.toInt
-      lengths = lengths :+ l
+    game = game.copyGame(enemies = List(Enemy(), Enemy(), Enemy()), player = Player(), revealedCards = List(), coveredCards = List())
+
+    val cards = CardStack().createCoveredCardStack(1, 1).cardStack
+
+    def createCardLists(listName: String, listIndex: Int): GameInterface = {
+      val list = (file \\ listName \ "card").toList
+      println(list)
+      @tailrec
+      def recursionList(i: Int, game: GameInterface): GameInterface = {
+        if i < list.length then
+          val newGame = recursionCards(0, (list(i) \ "@card").text, game)
+          recursionList(i + 1, newGame)
+        else game
+      }
+
+      @tailrec
+      def recursionCards(j: Int, card: String, game: GameInterface): GameInterface = {
+        if j < cards.length && cards(j).toString.equals(card) then
+          game.addCardToList(listIndex, cards(j))
+        else if j < cards.length then recursionCards(j + 1, card, game)
+        else game
+      }
+
+      recursionList(0, game).reverseList(listIndex)
     }
 
-    val cardNodes = (file \\ "card")
-    var i = 0
-    var j = 0
-    for (card <- cardNodes) {
-      if (i == lengths(j)) {
-        j += 1
-        while (lengths(j) == 0) {
-          j += 1
-        }
-        i = 0
-      }
-      val c = (card \ "@card").text
-      for (x <- cards.indices) {
-        if (cards(x).toString.equals(c)) {
-          game = game.setAllCards(j, cards(x))
-        }
-      }
-      i += 1
-    }
-    for i <- 0 until 6 do game = game.reverseList(i)
+    game = createCardLists("enemy1Cards", 0)
+    game = createCardLists("enemy2Cards", 1)
+    game = createCardLists("enemy3Cards", 2)
+    game = createCardLists("revealedCards", 3)
+    game = createCardLists("playerCards", 4)
+    game = createCardLists("coveredCards", 5)
 
     game
 
@@ -89,29 +82,33 @@ class FileIO extends FileIOInterface:
 
   def gameToXml(game: GameInterface): Node =
     <game
-      numOfPlayers={game.getNumOfPlayers.toString}
-      activePlayer={game.getActivePlayer.toString}
-      direction={game.getDirection.toString}
-      anotherPull={game.getAnotherPull.toString}
-      specialTop={game.getRevealedCardEffect.toString}
-    >
-      <cardLists>
-        {
-      for {
-        listNumber <- 0 to 5
-        cardNumber <- 0 until game.getLength(listNumber)
-      } yield {
-        <card card={game.getAllCards(listNumber, cardNumber)}></card>
-      }
-    }
-      </cardLists>
-      <listLengths>
-        {
-      for {
-        i <- 0 to 5
-      } yield {
-        <length length={game.getLength(i).toString}></length>
-      }
-    }
-      </listLengths>
+    numOfPlayers={game.numOfPlayers.toString}
+    activePlayer={game.activePlayer.toString}
+    direction={game.direction.toString}
+    anotherPull={game.alreadyPulled.toString}
+    specialTop={game.revealedCardEffect.toString}>
+      <enemy1Cards>
+        {for cardNumber <- game.enemies.head.enemyCards.indices
+        yield <card card={game.enemies.head.enemyCards(cardNumber).toString}/>}
+      </enemy1Cards>
+      <enemy2Cards>
+        {for cardNumber <- game.enemies(1).enemyCards.indices
+        yield <card card={game.enemies(1).enemyCards(cardNumber).toString}/>}
+      </enemy2Cards>
+      <enemy3Cards>
+        {for cardNumber <- game.enemies(2).enemyCards.indices
+        yield <card card={game.enemies(2).enemyCards(cardNumber).toString}/>}
+      </enemy3Cards>
+      <revealedCards>
+        {for cardNumber <- game.revealedCards.indices
+        yield <card card={game.revealedCards(cardNumber).toString}/>}
+      </revealedCards>
+      <playerCards>
+        {for cardNumber <- game.player.handCards.indices
+        yield <card card={game.player.handCards(cardNumber).toString}/>}
+      </playerCards>
+      <coveredCards>
+        {for cardNumber <- game.coveredCards.indices
+        yield <card card={game.coveredCards(cardNumber).toString}/>}
+      </coveredCards>
     </game>

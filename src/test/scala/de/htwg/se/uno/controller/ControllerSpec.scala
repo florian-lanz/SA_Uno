@@ -101,7 +101,7 @@ class ControllerSpec extends AnyWordSpec with Matchers {
         controller.controllerEvent("idle") should be(controller.controllerEvent("undo"))
       }
       "Not Pull a Card if the player has to suspend" in {
-        controller.game = controller.game.setRevealedCardEffect(-1)
+        controller.game = controller.game.copyGame(revealedCardEffect = -1)
         controller.get()
         controller.controllerEvent("idle") should be(controller.controllerEvent("pullCardNotAllowed"))
       }

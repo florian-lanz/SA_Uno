@@ -1,6 +1,6 @@
 package de.htwg.se.uno.model.gameComponent
 
-import de.htwg.se.uno.model.gameComponent.gameBaseImpl.{Card, Game}
+import de.htwg.se.uno.model.gameComponent.gameBaseImpl._
 
 trait GameInterface:
   def toString: String
@@ -28,3 +28,6 @@ trait GameInterface:
   def shuffle(): Game
   def setRevealedCardEffect(io: Int): Game
   def reverseList(list: Int): Game
+  def copyGame(numOfPlayers: 2 | 3 | 4 = numOfPlayers, coveredCards: List[Card] = coveredCards, revealedCards: List[Card] = revealedCards,
+               player: Player = player, enemies: List[Enemy] = enemies, revealedCardEffect: Int = revealedCardEffect,
+               activePlayer: Int = activePlayer, direction: Boolean = direction, alreadyPulled: Boolean = alreadyPulled): Game
