@@ -12,7 +12,6 @@ trait GameInterface( val numOfPlayers: 2 | 3 | 4,
                      val direction: Boolean,
                      val alreadyPulled: Boolean):
   def toString: String
-  def createTestGame(): Game
   def enemy(enemyIndex: Int, kiNeeded: Boolean = true): Game
   def pullMove(): Game
   def pushMove(string: String, color: Int): Game

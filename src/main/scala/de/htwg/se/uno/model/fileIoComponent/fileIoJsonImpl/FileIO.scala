@@ -22,9 +22,9 @@ class FileIO extends FileIOInterface:
     var game = injector.getInstance(Key.get(classOf[GameInterface], Names.named(numOfPlayers + " Players")))
 
     val activePlayer = (json \ "game" \ "activePlayer").get.toString.toInt
-    while activePlayer != game.numOfPlayers do game = game.changeActivePlayer()
+    while activePlayer != game.activePlayer do game = game.changeActivePlayer()
     val direction = (json \ "game" \ "direction").get.toString.toBoolean
-    if direction != game.direction then game = game.copyGame(direction = !game.direction)
+    game = game.copyGame(direction = direction)
 
     val anotherPull = (json \ "game" \ "anotherPull").get.toString.toBoolean
     game = game.copyGame(alreadyPulled = anotherPull)

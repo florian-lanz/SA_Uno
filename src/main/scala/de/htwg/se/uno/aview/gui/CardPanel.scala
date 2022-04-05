@@ -54,7 +54,7 @@ class CardPanel (list: Int, index: Int, controller: ControllerInterface) extends
           controller.enemy()
         }
       } else if (list == 4) {
-        controller.set(cardText(list, index))
+        controller.set(cardText(list, index), 0)
       } else {
         controller.controllerEvent("pushCardNotAllowed")
         controller.publish(new GameNotChanged)

@@ -25,7 +25,7 @@ class FileIO extends FileIOInterface :
     while activePlayer != game.activePlayer do game = game.changeActivePlayer()
 
     val direction = (file \\ "game" \ "@direction").text.toBoolean
-    if direction != game.direction then game = game.copyGame(direction = !game.direction)
+    game = game.copyGame(direction = direction)
 
     val anotherPull = (file \\ "game" \ "@anotherPull").text.toBoolean
     game = game.copyGame(alreadyPulled = anotherPull)

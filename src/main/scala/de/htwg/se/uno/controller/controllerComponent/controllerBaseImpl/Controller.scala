@@ -24,11 +24,6 @@ class Controller @Inject() (var game: GameInterface) extends ControllerInterface
     game = game.createGame()
     initialize()
 
-  def createTestGame(): Unit =
-    game = injector.getInstance(Key.get(classOf[GameInterface], Names.named("4 Players")))
-    game = game.createTestGame()
-    initialize()
-
   def initialize(): Unit =
     savedSpecialCard = ""
     undoManager = new UndoManager
@@ -64,7 +59,7 @@ class Controller @Inject() (var game: GameInterface) extends ControllerInterface
   def get(): Unit =
     if game.nextTurn() then
       val b = game.alreadyPulled
-      undoList = fileIo.gameToString(game).toString :: undoList
+      undoList = fileIo.gameToString(game) :: undoList
       game = game.changeActivePlayer()
       val activePlayer = game.activePlayer
       undoManager.doStep(new PullCommand(this))
@@ -92,6 +87,7 @@ class Controller @Inject() (var game: GameInterface) extends ControllerInterface
     if game.nextTurn() then controllerEvent("yourTurn")
     else controllerEvent("enemyTurn")
     if game.alreadyPulled then
+      resetActivePlayer()
       controllerEvent("enemyTurn")
     publish(new GameChanged)
     shuffle()

@@ -344,12 +344,10 @@ class SwingGui(controller: ControllerInterface) extends Frame {
     for (i <- 0 to 4) {
       val button = Button(
         if(i == 0) {
-          "New Testgame"
-        } else if(i == 1) {
           "Random Game with 2 Players"
-        } else if(i == 2) {
+        } else if(i == 1) {
           "Random Game with 3 Players"
-        } else if (i == 3){
+        } else if (i == 2){
           "Random Game with 4 Players"
         }else {
           "Quit"

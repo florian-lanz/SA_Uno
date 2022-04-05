@@ -59,26 +59,6 @@ case class Game @Inject() (
       alreadyPulled = false
     )
 
-  def createTestGame(): Game =
-    val cards = CardStack().createCoveredCardStack().cardStack
-    val revealedCardsNew = List(cards.head)
-    val playerNew = Player(List(cards(100), cards(104), cards(1), cards(5), cards(32), cards(61), cards(19), cards(21), cards(23)))
-    val enemiesNew = List(Enemy(List(cards(101), cards(105), cards(2), cards(6), cards(33), cards(62), cards(20), cards(22), cards(24))),
-      Enemy(List(cards(102), cards(106), cards(3), cards(7), cards(34), cards(63), cards(44), cards(46), cards(48))),
-      Enemy(List(cards(103), cards(107), cards(4), cards(8), cards(35), cards(64), cards(45), cards(47), cards(49))))
-    val coveredCardsNew = ((((cards filterNot revealedCards.contains) filterNot player.handCards.contains) filterNot
-      enemies.head.enemyCards.contains) filterNot enemies(1).enemyCards.contains) filterNot enemies(2).enemyCards.contains
-    copy(
-      coveredCards = coveredCardsNew,
-      revealedCards = revealedCardsNew,
-      player = playerNew,
-      enemies = enemiesNew,
-      revealedCardEffect = 0,
-      activePlayer = numOfPlayers - 1,
-      direction = true,
-      alreadyPulled = false
-    )
-
   def pushMove(string: String, color: Int): Game =
     if revealedCardEffect != -1 then
       val cardOption = player.findCard(string)
@@ -154,7 +134,7 @@ case class Game @Inject() (
             else
               canPushRecursion(i + 1)
           else if !alreadyPulled then
-            enemyPull(enemyIndex).copy(alreadyPulled = false, revealedCardEffect = 0)
+            enemyPull(enemyIndex)
           else
             copy(alreadyPulled = false)
         canPushRecursion(0)
@@ -232,25 +212,22 @@ case class Game @Inject() (
     )
 
   def enemyPull(enemyIndex: Int): Game =
-    if revealedCardEffect != -1 then
-      if !alreadyPulled then
-        @tailrec
-        def enemyPullRecursion(i: Int, enemyTemp: Enemy, coveredCardsTemp: List[Card]): Game =
-          if i < revealedCardEffect then
-            enemyPullRecursion(i + 1, enemyTemp.pullCard(coveredCardsTemp.head), coveredCardsTemp.tail)
-          else if revealedCardEffect == 0 && i == 0 then
-            copy(
-              enemies = enemies.updated(enemyIndex, enemyTemp.pullCard(coveredCardsTemp.head)),
-              coveredCards = coveredCardsTemp.tail,
-              alreadyPulled = true
-            )
-          else
-            copy(enemies = enemies.updated(enemyIndex, enemyTemp), coveredCards = coveredCardsTemp, alreadyPulled = false)
-        enemyPullRecursion(0, enemies(enemyIndex), coveredCards).copy(revealedCardEffect = 0)
-      else
-        copy(alreadyPulled = false, revealedCardEffect = 0)
+    if !alreadyPulled then
+      @tailrec
+      def enemyPullRecursion(i: Int, enemyTemp: Enemy, coveredCardsTemp: List[Card]): Game =
+        if i < revealedCardEffect then
+          enemyPullRecursion(i + 1, enemyTemp.pullCard(coveredCardsTemp.head), coveredCardsTemp.tail)
+        else if revealedCardEffect == 0 && i == 0 then
+          copy(
+            enemies = enemies.updated(enemyIndex, enemyTemp.pullCard(coveredCardsTemp.head)),
+            coveredCards = coveredCardsTemp.tail,
+            alreadyPulled = true
+          )
+        else
+          copy(enemies = enemies.updated(enemyIndex, enemyTemp), coveredCards = coveredCardsTemp, alreadyPulled = false)
+      enemyPullRecursion(0, enemies(enemyIndex), coveredCards).copy(revealedCardEffect = 0)
     else
-      changeActivePlayer().copy(revealedCardEffect = 0)
+      copy(alreadyPulled = false, revealedCardEffect = 0)
 
   def discoverRevealedCardEffect(card: Card): Int =
     card.value match

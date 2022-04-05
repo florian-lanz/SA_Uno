@@ -3,8 +3,7 @@ package de.htwg.se.uno.controller.controllerComponent
 import scala.swing.{Color, Publisher}
 
 trait ControllerInterface extends Publisher:
-  def createGame(size: Int = 7):Unit
-  def createTestGame():Unit
+  def createGame(size: Int):Unit
   def gameToString: String
   def set(string: String, color: Int): Unit
   def get(): Unit

@@ -22,15 +22,29 @@ class UndoManagerSpec extends AnyWordSpec {
       }
       "be able to do a Step" in {
         undoManager.doStep(command)
-        controller.game.player.handCards.length should be(10)
+        controller.game.player.handCards.length should be(8)
       }
       "be able to undo a Step" in {
+        controller = Controller(Game(4))
+        controller.createGame(4)
+        command = PullCommand(controller)
+        controller.undoList = controller.fileIo.gameToString(controller.game) :: controller.undoList
+        undoManager.doStep(command)
+        controller.game.player.handCards.length should be(8)
         undoManager.undoStep()
-        controller.game.player.handCards.length should be(9)
+        controller.game.player.handCards.length should be(7)
       }
       "be able to redo a Step" in {
+        controller = Controller(Game(4))
+        controller.createGame(4)
+        command = PullCommand(controller)
+        controller.undoList = controller.fileIo.gameToString(controller.game) :: controller.undoList
+        undoManager.doStep(command)
+        controller.game.player.handCards.length should be(8)
+        undoManager.undoStep()
+        controller.game.player.handCards.length should be(7)
         undoManager.redoStep()
-        controller.game.player.handCards.length should be(10)
+        controller.game.player.handCards.length should be(8)
       }
     }
   }
