@@ -9,9 +9,9 @@ class UndoManagerSpec extends AnyWordSpec {
   "A UndoManager" when {
     "new" should {
       val undoManager = new UndoManager()
-      val controller = new Controller(Game(4))
-      controller.createTestGame()
-      val command = new PullCommand(controller)
+      var controller = new Controller(Game(4))
+      controller.createGame(4)
+      var command = new PullCommand(controller)
       "Not be able to undo a Step" in {
         undoManager.undoStep()
         controller.game.activePlayer should be(3)

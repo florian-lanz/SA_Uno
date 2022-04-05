@@ -6,7 +6,7 @@ trait ControllerInterface extends Publisher:
   def createGame(size: Int = 7):Unit
   def createTestGame():Unit
   def gameToString: String
-  def set(string:String, color : Int = 0): Unit
+  def set(string: String, color: Int): Unit
   def get(): Unit
   def enemy(): Unit
   def undo(): Unit

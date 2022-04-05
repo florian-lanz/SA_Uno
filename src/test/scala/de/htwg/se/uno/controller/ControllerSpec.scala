@@ -8,7 +8,6 @@ import org.scalatest.wordspec.AnyWordSpec
 import scala.language.reflectiveCalls
 
 class ControllerSpec extends AnyWordSpec with Matchers {
-
   "A Controller" when {
     "it's a Publisher" should {
       val game = Game(2)
@@ -25,11 +24,6 @@ class ControllerSpec extends AnyWordSpec with Matchers {
         controller.createGame(3)
         controller.getNumOfPlayers should be(3)
       }
-      "Be able to create a new Test Game" in{
-        controller.createTestGame()
-        controller.getNumOfPlayers should be(4)
-      }
-
       "Not Push a Special card without a color" in {
         controller.set(controller.getCardText(4, 1))
         controller.getHs2 should be(controller.getCardText(4, 1))

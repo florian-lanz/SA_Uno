@@ -141,7 +141,7 @@ class Controller @Inject() (var game: GameInterface) extends ControllerInterface
 
   def shuffle(): Unit =
     if game.coveredCards.length <= 16 then
-      undoList = fileIo.gameToString(game).toString :: undoList
+      undoList = fileIo.gameToString(game) :: undoList
       undoManager.doStep(new ShuffleCommand(this))
       controllerEvent("shuffled")
       publish(new GameChanged)

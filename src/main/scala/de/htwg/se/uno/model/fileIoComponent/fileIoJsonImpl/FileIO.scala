@@ -21,7 +21,6 @@ class FileIO extends FileIOInterface:
     val numOfPlayers = (json \ "game" \ "numOfPlayers").get.toString.toInt
     var game = injector.getInstance(Key.get(classOf[GameInterface], Names.named(numOfPlayers + " Players")))
 
-
     val activePlayer = (json \ "game" \ "activePlayer").get.toString.toInt
     while activePlayer != game.numOfPlayers do game = game.changeActivePlayer()
     val direction = (json \ "game" \ "direction").get.toString.toBoolean
@@ -30,7 +29,7 @@ class FileIO extends FileIOInterface:
     val anotherPull = (json \ "game" \ "anotherPull").get.toString.toBoolean
     game = game.copyGame(alreadyPulled = anotherPull)
     val cards = CardStack().createCoveredCardStack(1, 1).cardStack
-    
+
     game = game.copyGame(enemies = List(Enemy(), Enemy(), Enemy()), player = Player(), revealedCards = List(), coveredCards = List())
 
     val specialTop = (json \ "game" \ "specialCard").get.toString.toInt

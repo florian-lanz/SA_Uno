@@ -10,7 +10,8 @@ class SwingGuiSpec extends AnyWordSpec with Matchers {
   "A SwingGui" when {
     var controller = new Controller(Game(4))
     "created" should {
-      controller.createTestGame()
+      controller.createGame(4)
+      val redOne = Card(Color.Red, Value.One)
       var swingGui = new SwingGui(controller)
       "Have a title" in {
         swingGui.title should be("HTWG Uno")

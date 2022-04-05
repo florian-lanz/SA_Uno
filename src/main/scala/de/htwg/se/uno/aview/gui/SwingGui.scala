@@ -262,7 +262,6 @@ class SwingGui(controller: ControllerInterface) extends Frame {
   menuBar = new MenuBar {
     contents += new Menu("File") {
       mnemonic = Key.F
-      contents += new MenuItem(Action("Test") {controller.createTestGame()})
       contents += new Menu("Random") {
         mnemonic = Key.R
         contents += new MenuItem(Action("2 Players") {controller.createGame(2)})
@@ -357,12 +356,10 @@ class SwingGui(controller: ControllerInterface) extends Frame {
         }
       ) {
         if(i == 0) {
-          controller.createTestGame()
-        } else if(i == 1) {
           controller.createGame(2)
-        } else if(i == 2) {
+        } else if(i == 1) {
           controller.createGame(3)
-        } else if (i == 3){
+        } else if (i == 2){
           controller.createGame(4)
         } else {
           System.exit(0)
