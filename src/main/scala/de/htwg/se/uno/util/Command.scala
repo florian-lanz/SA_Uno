@@ -6,7 +6,7 @@ trait Command(controller: Controller):
   def doStep(): Unit
 
   def undoStep(): Unit =
-    controller.redoList = controller.fileIo.gameToJson(controller.game).toString :: controller.redoList
+    controller.redoList = controller.fileIo.gameToString(controller.game) :: controller.redoList
     controller.game = controller.fileIo.load(controller.undoList.head)
     controller.undoList = controller.undoList.tail
 

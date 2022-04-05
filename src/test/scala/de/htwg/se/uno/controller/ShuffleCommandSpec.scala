@@ -13,17 +13,17 @@ class ShuffleCommandSpec extends AnyWordSpec with Matchers {
       val command = new ShuffleCommand(controller)
       "Be able to do a Step" in {
         controller.set("R 1")
-        controller.game.getLength(3) should be(2)
+        controller.game.revealedCards.length should be(2)
         command.doStep()
-        controller.game.getLength(3) should be(1)
+        controller.game.revealedCards.length should be(1)
       }
       "Be able to undo a Step" in {
         command.undoStep()
-        controller.game.getLength(3) should be(2)
+        controller.game.revealedCards.length should be(2)
       }
       "Be able to redo a Step" in {
         command.redoStep()
-        controller.game.getLength(3) should be(1)
+        controller.game.revealedCards.length should be(1)
       }
     }
   }

@@ -74,9 +74,9 @@ class FileIOSpec extends AnyWordSpec with Matchers {
         game.direction should be (oldGameFourPlayers.direction)
         game.alreadyPulled should be (oldGameFourPlayers.alreadyPulled)
       }
-      "have a gameToJson function that does nothing" in {
-        fileIO.gameToJson(oldGameTwoPlayers) should be (Json.obj())
-      }
+//      "have a gameToJson function that does nothing" in {
+//        fileIO.gameToJson(oldGameTwoPlayers) should be (Json.obj())
+//      }
     }
   }
 }

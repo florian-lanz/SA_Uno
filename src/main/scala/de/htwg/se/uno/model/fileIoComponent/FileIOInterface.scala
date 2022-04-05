@@ -6,4 +6,4 @@ import play.api.libs.json.JsValue
 trait FileIOInterface:
   def load(source: String = ""): GameInterface
   def save(game: GameInterface): Unit
-  def gameToJson(game: GameInterface): JsValue
+  def gameToString(game: GameInterface): String

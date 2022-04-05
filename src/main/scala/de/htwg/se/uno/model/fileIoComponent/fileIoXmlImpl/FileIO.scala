@@ -13,7 +13,7 @@ import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 import scala.xml.{Node, PrettyPrinter}
 
-class FileIO extends FileIOInterface:
+class FileIO extends FileIOInterface :
   override def load(source: String = "game.xml"): GameInterface =
     val file = if source.equals("game.xml") then scala.xml.XML.loadFile(source) else scala.xml.XML.loadString(source)
     val injector = Guice.createInjector(new UnoModule)
@@ -22,13 +22,13 @@ class FileIO extends FileIOInterface:
     var game = injector.getInstance(Key.get(classOf[GameInterface], Names.named(numOfPlayers + " Players")))
 
     val activePlayer = (file \\ "game" \ "@activePlayer").text.toInt
-    while activePlayer != game.getActivePlayer do game = game.setActivePlayer()
+    while activePlayer != game.activePlayer do game = game.changeActivePlayer()
 
     val direction = (file \\ "game" \ "@direction").text.toBoolean
-    if direction != game.getDirection then game = game.setDirection()
+    if direction != game.direction then game = game.copyGame(direction = !game.direction)
 
     val anotherPull = (file \\ "game" \ "@anotherPull").text.toBoolean
-    game = game.setAnotherPull(anotherPull)
+    game = game.copyGame(alreadyPulled = anotherPull)
 
     val specialTop = (file \\ "game" \ "@specialTop").text.toInt
     game = game.copyGame(revealedCardEffect = specialTop)
@@ -78,8 +78,6 @@ class FileIO extends FileIOInterface:
     pw.write(xml)
     pw.close()
 
-  override def gameToJson(game: GameInterface): JsValue = Json.obj()
-
   def gameToXml(game: GameInterface): Node =
     <game
     numOfPlayers={game.numOfPlayers.toString}
@@ -112,3 +110,5 @@ class FileIO extends FileIOInterface:
         yield <card card={game.coveredCards(cardNumber).toString}/>}
       </coveredCards>
     </game>
+
+  def gameToString(game: GameInterface): String = gameToXml(game).mkString

@@ -23,17 +23,18 @@ class FileIO extends FileIOInterface:
 
 
     val activePlayer = (json \ "game" \ "activePlayer").get.toString.toInt
-    while activePlayer != game.getActivePlayer do game = game.setActivePlayer()
+    while activePlayer != game.numOfPlayers do game = game.changeActivePlayer()
     val direction = (json \ "game" \ "direction").get.toString.toBoolean
-    if direction != game.getDirection then game = game.setDirection()
+    if direction != game.direction then game = game.copyGame(direction = !game.direction)
 
     val anotherPull = (json \ "game" \ "anotherPull").get.toString.toBoolean
-    game = game.setAnotherPull(anotherPull)
+    game = game.copyGame(alreadyPulled = anotherPull)
     val cards = CardStack().createCoveredCardStack(1, 1).cardStack
-    game = game.clearAllLists()
+    
+    game = game.copyGame(enemies = List(Enemy(), Enemy(), Enemy()), player = Player(), revealedCards = List(), coveredCards = List())
 
     val specialTop = (json \ "game" \ "specialCard").get.toString.toInt
-    game = game.setRevealedCardEffect(specialTop)
+    game = game.copyGame(revealedCardEffect = specialTop)
 
     def createCardLists(listName: String, listIndex: Int): GameInterface = {
       val list = (json \ "game" \ listName).as[List[String]]
@@ -48,7 +49,7 @@ class FileIO extends FileIOInterface:
       @tailrec
       def recursionCards(j: Int, card: String, game: GameInterface): GameInterface = {
         if j < cards.length && cards(j).toString.equals(card) then
-          game.setAllCards(listIndex, cards(j))
+          game.addCardToList(listIndex, cards(j))
         else if j < cards.length then recursionCards(j + 1, card, game)
         else game
       }
@@ -81,6 +82,8 @@ class FileIO extends FileIOInterface:
         "coveredCardStack" -> JsArray(for cardNumber <- game.coveredCards.indices yield JsString(game.coveredCards(cardNumber).toString))
       )
     )
+
+  def gameToString(game: GameInterface): String = gameToJson(game).toString
 
   override def save(grid: GameInterface): Unit =
     import java.io._

@@ -54,7 +54,7 @@ class TuiSpec extends AnyWordSpec with Matchers {
     }
     "Set another Card on input s [Karte]" in {
       tui.processInputLine("s " + controller.getCardText(4, 1) + " blue")
-      controller.game.getLength(4) should be (7)
+      controller.game.player.handCards.length should be (7)
     }
     "Undo a Step" in {
       tui.processInputLine("u")

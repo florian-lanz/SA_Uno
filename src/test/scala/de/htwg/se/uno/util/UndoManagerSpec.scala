@@ -14,7 +14,7 @@ class UndoManagerSpec extends AnyWordSpec {
       val command = new PullCommand(controller)
       "Not be able to undo a Step" in {
         undoManager.undoStep()
-        controller.game.getActivePlayer should be(3)
+        controller.game.activePlayer should be(3)
       }
       "Not be able to redo a Step" in {
         undoManager.redoStep()
@@ -22,15 +22,15 @@ class UndoManagerSpec extends AnyWordSpec {
       }
       "be able to do a Step" in {
         undoManager.doStep(command)
-        controller.game.getLength(4) should be(10)
+        controller.game.player.handCards.length should be(10)
       }
       "be able to undo a Step" in {
         undoManager.undoStep()
-        controller.game.getLength(4) should be(9)
+        controller.game.player.handCards.length should be(9)
       }
       "be able to redo a Step" in {
         undoManager.redoStep()
-        controller.game.getLength(4) should be(10)
+        controller.game.player.handCards.length should be(10)
       }
     }
   }

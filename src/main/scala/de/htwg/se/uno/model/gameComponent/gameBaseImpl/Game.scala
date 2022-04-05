@@ -8,16 +8,21 @@ import scala.util.Random
 import scala.annotation.tailrec
 
 case class Game @Inject() (
-    @Named("DefaultPlayers") numOfPlayers: 2 | 3 | 4,
-    coveredCards: List[Card] = List(),
-    revealedCards: List[Card] = List(),
-    player: Player = Player(List()),
-    enemies: List[Enemy] = List(),
-    revealedCardEffect: Int = 0,
-    activePlayer: Int = 0,
-    direction: Boolean = true,
-    alreadyPulled: Boolean = false
-) extends GameInterface:
+    @Named("DefaultPlayers") override val numOfPlayers: 2 | 3 | 4,
+    override val coveredCards: List[Card] = List(),
+    override val revealedCards: List[Card] = List(),
+    override val player: Player = Player(List()),
+    override val enemies: List[Enemy] = List(),
+    override val revealedCardEffect: Int = 0,
+    override val activePlayer: Int = 0,
+    override val direction: Boolean = true,
+    override val alreadyPulled: Boolean = false
+) extends GameInterface(numOfPlayers, coveredCards, revealedCards, player, enemies, revealedCardEffect, activePlayer, direction, alreadyPulled):
+  
+  def copyGame(numOfPlayers: 2 | 3 | 4 = numOfPlayers, coveredCards: List[Card] = coveredCards, revealedCards: List[Card] = revealedCards,
+               player: Player = player, enemies: List[Enemy] = enemies, revealedCardEffect: Int = revealedCardEffect,
+               activePlayer: Int = activePlayer, direction: Boolean = direction, alreadyPulled: Boolean = alreadyPulled): Game =
+    copy(numOfPlayers, coveredCards, revealedCards, player, enemies, revealedCardEffect, activePlayer, direction, alreadyPulled)
 
   def createGame(): Game =
     val cards = CardStack().createCoveredCardStack().shuffle().cardStack
@@ -91,13 +96,13 @@ case class Game @Inject() (
           copy(
             revealedCards = revealedCardsNew,
             player = player.pushCard(card),
-            revealedCardEffect = getRevealedCardEffect(card),
+            revealedCardEffect = discoverRevealedCardEffect(card),
             direction = if card.value == Value.DirectionChange then !direction else direction,
             alreadyPulled = alreadyPulledNew
           )
         else copy()
       else copy()
-    else setActivePlayer().copy(revealedCardEffect = 0)
+    else changeActivePlayer().copy(revealedCardEffect = 0)
 
   def pullMove(): Game =
     if revealedCardEffect != -1 then
@@ -112,7 +117,7 @@ case class Game @Inject() (
             copy(player = playerTemp, coveredCards = coveredCardsTemp, alreadyPulled = false)
         pullMoveRecursion(0, player, coveredCards).copy(revealedCardEffect = 0)
       else copy(alreadyPulled = false, revealedCardEffect = 0)
-    else setActivePlayer().copy(revealedCardEffect = 0)
+    else changeActivePlayer().copy(revealedCardEffect = 0)
 
   def enemy(enemyIndex: Int, kiNeeded: Boolean = true): Game =
     if revealedCardEffect != -1 then
@@ -220,7 +225,7 @@ case class Game @Inject() (
       card
     copy(
       revealedCards = coloredCard :: revealedCards,
-      revealedCardEffect = getRevealedCardEffect(card),
+      revealedCardEffect = discoverRevealedCardEffect(card),
       direction = if card.value == Value.DirectionChange then !direction else direction,
       alreadyPulled = false,
       enemies = enemies.updated(enemyIndex, enemies(enemyIndex).pushCard(card))
@@ -245,35 +250,14 @@ case class Game @Inject() (
       else
         copy(alreadyPulled = false, revealedCardEffect = 0)
     else
-      setActivePlayer().copy(revealedCardEffect = 0)
+      changeActivePlayer().copy(revealedCardEffect = 0)
 
-  def getRevealedCardEffect(card: Card): Int =
+  def discoverRevealedCardEffect(card: Card): Int =
     card.value match
       case Value.Suspend  => -1
       case Value.PlusTwo  => revealedCardEffect + 2
       case Value.PlusFour => revealedCardEffect + 4
       case _              => 0
-
-  def getLength(list: Integer): Int =
-    list match
-      case 0 | 1 | 2 => enemies(list).enemyCards.length
-      case 3         => revealedCards.length
-      case 4         => player.handCards.length
-      case _         => coveredCards.length
-
-  def getCardText(list: Int, index: Int): String =
-    if list == 3 && index == 1 then revealedCards.head.toString
-    else if list == 3 && index == 2 then "Do Step"
-    else if list == 4 then player.handCards(index).toString
-    else "Uno"
-
-  def getGuiCardText(list: Int, index: Int): String =
-    if list == 3 && index == 1 then revealedCards.head.toGuiString
-    else if list == 3 && index == 2 then "Do Step"
-    else if list == 4 then player.handCards(index).toGuiString
-    else "Uno"
-
-  def getNumOfPlayers: 2 | 3 | 4 = numOfPlayers
 
   def nextEnemy(): Int =
     if numOfPlayers == 2 || (activePlayer == 0 && direction) || (activePlayer == 2 && !direction) then
@@ -288,7 +272,7 @@ case class Game @Inject() (
 
   def changeActivePlayer(): Game = if nextTurn() then copy(activePlayer = 0) else copy(activePlayer = nextEnemy())
 
-  def setAllCards(list: Int, card: Card): Game =
+  def addCardToList(list: Int, card: Card): Game =
     list match
       case 0 | 1 | 2 => copy(enemies = enemies.updated(list, enemies(list).pullCard(card)))
       case 3 => copy(revealedCards = card :: revealedCards)
@@ -302,44 +286,31 @@ case class Game @Inject() (
       case 4 => copy(player = Player(player.handCards.reverse))
       case _ => copy(coveredCards = coveredCards.reverse)
 
-  def clearAllLists(): Game =
-    copy(
-      enemies = List.fill(3)(Enemy()),
-      player = Player(),
-      coveredCards = List(),
-      revealedCards = List(),
-      revealedCardEffect = 0
-    )
-
-  def getRevealedCardEffect: Int = revealedCardEffect
-
-  def setRevealedCardEffect(io: Int): Game = copy(revealedCardEffect = io)
-
   def shuffle(): Game = copy(coveredCards = Random.shuffle(coveredCards ::: revealedCards.tail), revealedCards = List(revealedCards.head))
 
   override def toString: String =
-    val cardTop = "┌-------┐  " // a
-    val cardEmpty = "|       |  " // b
-    val coveredCard = "|  Uno  |  " // c
-    val cardBottom = "└-------┘  " // d
+    val cardTop = "┌-------┐  "
+    val cardEmpty = "|       |  "
+    val coveredCard = "|  Uno  |  "
+    val cardBottom = "└-------┘  "
     @tailrec
     def enemy1CardsRecursion(i: Int, enemyList: List[String]): List[String] =
       if i < enemies.head.enemyCards.length then
         enemy1CardsRecursion(i + 1, List(enemyList.head + cardTop, enemyList(1) + cardEmpty, enemyList(2) + coveredCard, enemyList(3) + cardBottom))
       else
         enemyList
-    val enemy1Cards = enemy1CardsRecursion(0, List("", "", "", "")) // e, f, g, h
+    val enemy1Cards = enemy1CardsRecursion(0, List("", "", "", ""))
     @tailrec
     def playerCardsRecursion(i: Int, playerList: List[String]): List[String] =
       if i < player.handCards.length then
         playerCardsRecursion(i + 1, List(playerList.head + cardTop, playerList(1) + cardEmpty, playerList(2) + "|  " + player.handCards(i).toString + "  |  ", playerList(3) + cardBottom))
       else
         playerList
-    val playerCards = playerCardsRecursion(0, List("", "", "", "")) // m, n, o, p
-    val centerCardsTop = cardTop + "           ┌-------┐" + "\n" // i
-    val centerCardsEmpty = cardEmpty + "           |       |" + "\n" // j
-    val centerCardsText = coveredCard + "           |  " + revealedCards.head.toString + "  |" + "\n" // k
-    val centerCardsBottom = cardBottom + "           └-------┘" + "\n" // l
+    val playerCards = playerCardsRecursion(0, List("", "", "", ""))
+    val centerCardsTop = cardTop + "           ┌-------┐" + "\n"
+    val centerCardsEmpty = cardEmpty + "           |       |" + "\n"
+    val centerCardsText = coveredCard + "           |  " + revealedCards.head.toString + "  |" + "\n"
+    val centerCardsBottom = cardBottom + "           └-------┘" + "\n"
     val enemy2Cards = if numOfPlayers >= 3 then
       @tailrec
       def enemy2CardsRecursion(i: Int, enemyList: List[String]): List[String] =
@@ -349,7 +320,7 @@ case class Game @Inject() (
           enemyList
       enemy2CardsRecursion(0, List("", "", "", ""))
     else
-      List("", "", "", "") // q, r, s, t
+      List("", "", "", "")
     val enemy3Cards = if numOfPlayers >= 4 then
       @tailrec
       def enemy3CardsRecursion(i: Int, enemyList: List[String]): List[String] =
@@ -359,7 +330,7 @@ case class Game @Inject() (
           enemyList
       enemy3CardsRecursion(0, List("", "", "", ""))
     else
-      List("", "", "", "") // u, v, w, x
+      List("", "", "", "")
     enemy1Cards.head + "\t\t\t\t\t" + enemy2Cards.head + "\n" +
       enemy1Cards(1) + "\t\t\t\t\t" + enemy2Cards(1) + "\n" +
       enemy1Cards(2) + "\t\t\t\t\t" + enemy2Cards(2) + "\n" +
