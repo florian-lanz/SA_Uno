@@ -5,27 +5,9 @@ import scala.util.Random
 
 case class CardStack(cardStack: List[Card] = List()):
   def createCoveredCardStack(amountColorCards: Int = 2, amountSpecialCards: Int = 4): CardStack =
-    @tailrec
-    def cardStackRecursion(cardStack: List[Card], colorIndex: Int): List[Card] =
-      @tailrec
-      def cardStackRecursion2(cardStack: List[Card], color: Color, valueIndex: Int): List[Card] =
-        if valueIndex < Value.values.length then
-          val value = Value.fromOrdinal(valueIndex)
-          val newCardStack =
-            if (value == Value.PlusFour || value == Value.ColorChange) && color == Color.Special then
-              cardStack ::: List.fill(amountSpecialCards)(Card(color, value))
-            else if value == Value.Zero && color != Color.Special then
-              cardStack ::: List(Card(color, value))
-            else if value != Value.PlusFour && value != Value.ColorChange && color != Color.Special then
-              cardStack ::: List.fill(amountColorCards)(Card(color, value))
-            else cardStack
-          cardStackRecursion2(newCardStack, color, valueIndex + 1)
-        else cardStack
-      if colorIndex < Color.values.length then
-        val color = Color.fromOrdinal(colorIndex)
-        cardStackRecursion(cardStackRecursion2(cardStack, color, 0), colorIndex + 1)
-      else cardStack
-    val cardStack = cardStackRecursion(List(), 0)
-    copy(cardStack)
+    val numberCards = (1 to 12).map(value => (0 to 3).map(color => List.fill(amountColorCards)(Card(Color.fromOrdinal(color), Value.fromOrdinal(value)))).toList.flatten).toList.flatten
+    val zeroCards = (0 to 3).map(color => Card(Color.fromOrdinal(color), Value.Zero)).toList
+    val specialCards = (13 to 14).map(value => List.fill(amountSpecialCards)(Card(Color.Special, Value.fromOrdinal(value)))).toList.flatten
+    copy(zeroCards ::: numberCards ::: specialCards)
 
   def shuffle(): CardStack = copy(Random.shuffle(cardStack))
