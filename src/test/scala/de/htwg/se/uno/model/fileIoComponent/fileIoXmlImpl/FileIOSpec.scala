@@ -6,6 +6,8 @@ import org.scalatest.wordspec.AnyWordSpec
 import de.htwg.se.uno.model.gameComponent.gameBaseImpl.*
 import play.api.libs.json.Json
 
+import scala.util.{Failure, Success}
+
 class FileIOSpec extends AnyWordSpec with Matchers {
   "A FileIO" when {
     "new" should {
