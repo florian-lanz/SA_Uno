@@ -2,6 +2,8 @@ package de.htwg.se.uno.util
 
 import de.htwg.se.uno.controller.controllerComponent.controllerBaseImpl.Controller
 
+import scala.util.{Failure, Success}
+
 trait Command(controller: Controller):
   def doStep(): Unit
 

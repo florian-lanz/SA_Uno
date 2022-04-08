@@ -29,32 +29,9 @@ class FileIO extends FileIOInterface:
     val anotherPull = (json \ "game" \ "anotherPull").get.toString.toBoolean
     game = game.copyGame(alreadyPulled = anotherPull)
     val cards = CardStack().createCoveredCardStack(1, 1).cardStack
-
-    game = game.copyGame(enemies = List(Enemy(), Enemy(), Enemy()), player = Player(), revealedCards = List(), coveredCards = List())
-
-    val specialTop = (json \ "game" \ "specialCard").get.toString.toInt
-    game = game.copyGame(revealedCardEffect = specialTop)
-
-    def createCardLists(listName: String, listIndex: Int): GameInterface = {
-      val list = (json \ "game" \ listName).as[List[String]]
-      @tailrec
-      def recursionList(i: Int, game: GameInterface): GameInterface = {
-        if i < list.length then
-          val newGame = recursionCards(0, list(i), game)
-          recursionList(i + 1, newGame)
-        else game
-      }
-
-      @tailrec
-      def recursionCards(j: Int, card: String, game: GameInterface): GameInterface = {
-        if j < cards.length && cards(j).toString.equals(card) then
-          game.addCardToList(listIndex, cards(j))
-        else if j < cards.length then recursionCards(j + 1, card, game)
-        else game
-      }
-
-      recursionList(0, game).reverseList(listIndex)
-    }
+    
+    def createCardList(listName: String): List[Card] =
+      (json \ "game" \ listName).as[List[String]].flatMap(cardString => cards.filter(card => card.toString.equals(cardString)))
 
     game = createCardLists("enemy1Cards", 0)
     game = createCardLists("enemy2Cards", 1)

@@ -249,20 +249,6 @@ case class Game @Inject() (
 
   def changeActivePlayer(): Game = if nextTurn() then copy(activePlayer = 0) else copy(activePlayer = nextEnemy())
 
-  def addCardToList(list: Int, card: Card): Game =
-    list match
-      case 0 | 1 | 2 => copy(enemies = enemies.updated(list, enemies(list).pullCard(card)))
-      case 3 => copy(revealedCards = card :: revealedCards)
-      case 4 => copy(player = player.pullCard(card))
-      case _ => copy(coveredCards = card :: coveredCards)
-
-  def reverseList(list: Int): Game =
-    list match
-      case 0 | 1 | 2 => copy(enemies = enemies.updated(list, Enemy(enemies(list).enemyCards.reverse)))
-      case 3 => copy(revealedCards = revealedCards.reverse)
-      case 4 => copy(player = Player(player.handCards.reverse))
-      case _ => copy(coveredCards = coveredCards.reverse)
-
   def shuffle(): Game = copy(coveredCards = Random.shuffle(coveredCards ::: revealedCards.tail), revealedCards = List(revealedCards.head))
 
   override def toString: String =

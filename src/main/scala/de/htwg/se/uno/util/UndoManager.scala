@@ -1,5 +1,7 @@
 package de.htwg.se.uno.util
 
+import scala.util.Try
+
 class UndoManager:
   private var undoStack: List[Command]= Nil
   private var redoStack: List[Command]= Nil

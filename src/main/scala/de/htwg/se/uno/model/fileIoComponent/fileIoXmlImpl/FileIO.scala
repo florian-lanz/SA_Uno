@@ -3,72 +3,49 @@ package de.htwg.se.uno.model.fileIoComponent.fileIoXmlImpl
 import com.google.inject.{Guice, Key}
 import com.google.inject.name.Names
 import de.htwg.se.uno.UnoModule
-import de.htwg.se.uno.model.gameComponent.gameBaseImpl
 import de.htwg.se.uno.model.fileIoComponent.FileIOInterface
-import de.htwg.se.uno.model.gameComponent.gameBaseImpl._
+import de.htwg.se.uno.model.gameComponent.gameBaseImpl.*
 import de.htwg.se.uno.model.gameComponent.GameInterface
 import play.api.libs.json.{JsValue, Json}
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
+import scala.util.Try
 import scala.xml.{Node, PrettyPrinter}
 
 class FileIO extends FileIOInterface :
-  override def load(source: String = "game.xml"): GameInterface =
+  override def load(source: String = "game.xml"): Try[GameInterface] = Try {
     val file = if source.equals("game.xml") then scala.xml.XML.loadFile(source) else scala.xml.XML.loadString(source)
     val injector = Guice.createInjector(new UnoModule)
 
     val numOfPlayers = (file \\ "game" \\ "@numOfPlayers").text.toInt
-    var game = injector.getInstance(Key.get(classOf[GameInterface], Names.named(numOfPlayers + " Players")))
-
+    val game = injector.getInstance(Key.get(classOf[GameInterface], Names.named(numOfPlayers + " Players")))
     val activePlayer = (file \\ "game" \ "@activePlayer").text.toInt
-    while activePlayer != game.activePlayer do game = game.changeActivePlayer()
-
     val direction = (file \\ "game" \ "@direction").text.toBoolean
-    game = game.copyGame(direction = direction)
-
-    val anotherPull = (file \\ "game" \ "@anotherPull").text.toBoolean
-    game = game.copyGame(alreadyPulled = anotherPull)
-
-    val specialTop = (file \\ "game" \ "@specialTop").text.toInt
-    game = game.copyGame(revealedCardEffect = specialTop)
-
-    game = game.copyGame(enemies = List(Enemy(), Enemy(), Enemy()), player = Player(), revealedCards = List(), coveredCards = List())
-
+    val alreadyPulled = (file \\ "game" \ "@anotherPull").text.toBoolean
+    val revealedCardEffect = (file \\ "game" \ "@specialTop").text.toInt
     val cards = CardStack().createCoveredCardStack(1, 1).cardStack
 
-    def createCardLists(listName: String, listIndex: Int): GameInterface = {
-      val list = (file \\ listName \ "card").toList
-      println(list)
-      @tailrec
-      def recursionList(i: Int, game: GameInterface): GameInterface = {
-        if i < list.length then
-          val newGame = recursionCards(0, (list(i) \ "@card").text, game)
-          recursionList(i + 1, newGame)
-        else game
-      }
+    def createCardList(listName: String): List[Card] =
+      (file \\ listName \ "card").toList.flatMap(cardString => cards.filter(card => card.toString.equals((cardString \ "@card").text)))
 
-      @tailrec
-      def recursionCards(j: Int, card: String, game: GameInterface): GameInterface = {
-        if j < cards.length && cards(j).toString.equals(card) then
-          game.addCardToList(listIndex, cards(j))
-        else if j < cards.length then recursionCards(j + 1, card, game)
-        else game
-      }
+    game.copyGame(
+      activePlayer = activePlayer,
+      direction = direction,
+      alreadyPulled = alreadyPulled,
+      revealedCardEffect = revealedCardEffect,
+      enemies = List(
+        Enemy(createCardList("enemy1Cards")),
+        Enemy(createCardList("enemy2Cards")),
+        Enemy(createCardList("enemy3Cards"))
+      ),
+      player = Player(createCardList("playerCards")),
+      revealedCards = createCardList("revealedCards"),
+      coveredCards = createCardList("coveredCards")
+    )
+  }
 
-      recursionList(0, game).reverseList(listIndex)
-    }
-
-    game = createCardLists("enemy1Cards", 0)
-    game = createCardLists("enemy2Cards", 1)
-    game = createCardLists("enemy3Cards", 2)
-    game = createCardLists("revealedCards", 3)
-    game = createCardLists("playerCards", 4)
-    game = createCardLists("coveredCards", 5)
-
-    game
-
-  override def save(game: GameInterface): Unit = saveString(game)
+  override def save(game: GameInterface): Try[Unit] = Try { saveString(game) }
 
   def saveString(game: GameInterface): Unit =
     import java.io._
@@ -77,6 +54,8 @@ class FileIO extends FileIOInterface :
     val xml = prettyPrinter.format(gameToXml(game))
     pw.write(xml)
     pw.close()
+
+  def gameToString(game: GameInterface): String = gameToXml(game).mkString
 
   def gameToXml(game: GameInterface): Node =
     <game
@@ -110,5 +89,3 @@ class FileIO extends FileIOInterface :
         yield <card card={game.coveredCards(cardNumber).toString}/>}
       </coveredCards>
     </game>
-
-  def gameToString(game: GameInterface): String = gameToXml(game).mkString

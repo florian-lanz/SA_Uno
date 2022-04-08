@@ -64,7 +64,6 @@ class Tui(controller: ControllerInterface) extends Reactor {
       case _ =>
         controller.controllerEvent("unknownCommand")
         Success("Unknown Command: " + input)
-        //Failure(new IllegalArgumentException("Wrong input: " + input))
     }
   }
 

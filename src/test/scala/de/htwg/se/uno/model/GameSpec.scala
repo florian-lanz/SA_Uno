@@ -66,14 +66,6 @@ class GameSpec extends AnyWordSpec {
         gameThreePlayer.changeActivePlayer().activePlayer should be (0)
         game.changeActivePlayer().activePlayer should be (1)
       }
-      "Should be able to add a card to a list" in {
-        game.coveredCards should be (List())
-        game.addCardToList(5, redZero).coveredCards should be (List(redZero))
-      }
-      "Should be able to reverse a list" in {
-        val gameSpec = Game(numOfPlayers = 2, coveredCards = List(redZero, bluePlusTwo, yellowPlusFour, greenSuspend))
-        gameSpec.reverseList(5).coveredCards should be (List(greenSuspend, yellowPlusFour, bluePlusTwo, redZero))
-      }
       "Should be able to shuffle" in {
         val shuffledGame = Game(numOfPlayers = 2, coveredCards = List(redZero), revealedCards = List(redZero, bluePlusTwo, yellowPlusFour, greenSuspend)).shuffle()
         shuffledGame.coveredCards.length should be (4)

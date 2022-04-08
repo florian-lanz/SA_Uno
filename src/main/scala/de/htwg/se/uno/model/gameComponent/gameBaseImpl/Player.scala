@@ -31,12 +31,4 @@ case class Player(handCards: List[Card] = List()):
 
   def pullCard(card: Card): Player = copy(card :: handCards)
 
-  def findCard(s: String): Option[Card] = 
-    @tailrec
-    def getCardRecursion(i: Int): Int = 
-      if i < handCards.length then
-        if s.equals(handCards(i).toString) then i
-        else getCardRecursion(i + 1)
-      else -1
-    val index = getCardRecursion(0)
-    if index != -1 then Some(handCards(index)) else None
+  def findCard(s: String): Option[Card] = handCards.find(card => card.toString.equals(s))

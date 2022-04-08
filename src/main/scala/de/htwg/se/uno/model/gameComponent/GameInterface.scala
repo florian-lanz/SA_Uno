@@ -19,9 +19,7 @@ trait GameInterface( val numOfPlayers: 2 | 3 | 4,
   def nextTurn(): Boolean
   def nextEnemy(): Int
   def changeActivePlayer(): Game
-  def addCardToList(list: Int, card: Card): Game
   def shuffle(): Game
-  def reverseList(list: Int): Game
   def copyGame(numOfPlayers: 2 | 3 | 4 = numOfPlayers, coveredCards: List[Card] = coveredCards, revealedCards: List[Card] = revealedCards,
                player: Player = player, enemies: List[Enemy] = enemies, revealedCardEffect: Int = revealedCardEffect,
                activePlayer: Int = activePlayer, direction: Boolean = direction, alreadyPulled: Boolean = alreadyPulled): Game
