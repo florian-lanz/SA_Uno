@@ -9,6 +9,7 @@ import de.htwg.se.uno.model.gameComponent.GameInterface
 import de.htwg.se.uno.util.UndoManager
 
 import scala.swing.{Color, Publisher}
+import scala.util.{Failure, Success}
 
 class Controller @Inject() (var game: GameInterface) extends ControllerInterface with Publisher:
   private var undoManager = new UndoManager
@@ -94,29 +95,47 @@ class Controller @Inject() (var game: GameInterface) extends ControllerInterface
     won()
 
   def undo(): Unit =
-    undoManager.undoStep()
-    while !game.nextTurn() do undoManager.undoStep()
-    controllerEvent("undo")
+    var result = undoManager.undoStep()
+    result match
+      case Success(value) =>
+        controllerEvent("undo")
+        while !game.nextTurn() do
+          result = undoManager.undoStep()
+          result match
+            case Success(value) => controllerEvent("undo")
+            case Failure(e) =>
+              controllerEvent("couldNotUndo")
+      case Failure(e) =>
+        controllerEvent("couldNotUndo")
     publish(new GameChanged)
     won()
 
   def redo(): Unit =
-    undoManager.redoStep()
-    controllerEvent("redo")
+    val result = undoManager.redoStep()
+    result match
+      case Success(value) => controllerEvent("redo")
+      case Failure(e) => controllerEvent("couldNotRedo")
     publish(new GameChanged)
     shuffle()
     won()
 
   def save(): Unit =
-    fileIo.save(game)
-    controllerEvent("save")
+    val result = fileIo.save(game)
+    result match
+      case Success(value) => controllerEvent("save")
+      case Failure(e) => controllerEvent("couldNotSave")
     publish(new GameChanged)
 
   def load(): Unit =
-    game = fileIo.load()
-    savedSpecialCard = ""
-    undoManager = new UndoManager
-    controllerEvent("load")
+    val result = fileIo.load()
+    result match
+      case Success(value) =>
+        game = value
+        savedSpecialCard = ""
+        undoManager = new UndoManager
+        controllerEvent("load")
+      case _ =>
+        controllerEvent("couldNotLoad")
     publish(new GameChanged)
 
   def won(): Unit =
@@ -187,6 +206,10 @@ class Controller @Inject() (var game: GameInterface) extends ControllerInterface
       case "redo" => "Zug wiederhergestellt"
       case "save" => "Spiel gespeichert"
       case "load" => "Spiel geladen"
+      case "couldNotLoad" => "Konnte keinen Spielstand laden!"
+      case "couldNotSave" => "Spielstand konnte nicht gespeichert werden"
+      case "couldNotUndo" => "Es konnte Kein Spielzug rückgängig gemacht werden"
+      case "couldNotRedo" => "Es konnte kein Spielzug wiederhergestellt werden"
       case "chooseColor" => "Wähle eine Farbe"
       case "shuffled" => "Verdeckter Kartenstapel wurde neu gemischt"
       case "idle" => controllerEventString

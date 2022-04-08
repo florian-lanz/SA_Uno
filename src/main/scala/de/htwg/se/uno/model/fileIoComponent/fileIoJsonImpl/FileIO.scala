@@ -5,42 +5,46 @@ import com.google.inject.name.Names
 import de.htwg.se.uno.UnoModule
 import de.htwg.se.uno.model.gameComponent.gameBaseImpl
 import de.htwg.se.uno.model.fileIoComponent.FileIOInterface
-import de.htwg.se.uno.model.gameComponent.gameBaseImpl._
+import de.htwg.se.uno.model.gameComponent.gameBaseImpl.*
 import de.htwg.se.uno.model.gameComponent.GameInterface
 import play.api.libs.json.*
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
+import scala.util.Try
 
 class FileIO extends FileIOInterface:
-  override def load(source: String = Source.fromFile("game.json").getLines().mkString): GameInterface =
-    val json: JsValue = Json.parse(source)
+  override def load(source: String = "game.json"): Try[GameInterface] = Try {
+    val json: JsValue = Json.parse(if source.equals("game.json") then Source.fromFile("game.json").getLines().mkString else source)
     val injector = Guice.createInjector(new UnoModule)
 
     val numOfPlayers = (json \ "game" \ "numOfPlayers").get.toString.toInt
-    var game = injector.getInstance(Key.get(classOf[GameInterface], Names.named(numOfPlayers + " Players")))
-
+    val game = injector.getInstance(Key.get(classOf[GameInterface], Names.named(numOfPlayers + " Players")))
     val activePlayer = (json \ "game" \ "activePlayer").get.toString.toInt
-    while activePlayer != game.activePlayer do game = game.changeActivePlayer()
     val direction = (json \ "game" \ "direction").get.toString.toBoolean
-    game = game.copyGame(direction = direction)
-
-    val anotherPull = (json \ "game" \ "anotherPull").get.toString.toBoolean
-    game = game.copyGame(alreadyPulled = anotherPull)
+    val alreadyPulled = (json \ "game" \ "anotherPull").get.toString.toBoolean
+    val revealedCardEffect = (json \ "game" \ "specialCard").get.toString.toInt
     val cards = CardStack().createCoveredCardStack(1, 1).cardStack
     
     def createCardList(listName: String): List[Card] =
       (json \ "game" \ listName).as[List[String]].flatMap(cardString => cards.filter(card => card.toString.equals(cardString)))
 
-    game = createCardLists("enemy1Cards", 0)
-    game = createCardLists("enemy2Cards", 1)
-    game = createCardLists("enemy3Cards", 2)
-    game = createCardLists("openCardStack", 3)
-    game = createCardLists("playerCards", 4)
-    game = createCardLists("coveredCardStack", 5)
-
-    game
+    game.copyGame(
+      activePlayer = activePlayer,
+      direction = direction,
+      alreadyPulled = alreadyPulled,
+      revealedCardEffect = revealedCardEffect,
+      enemies = List(
+        Enemy(createCardList("enemy1Cards")),
+        Enemy(createCardList("enemy2Cards")),
+        Enemy(createCardList("enemy3Cards")),
+      ),
+      player = Player(createCardList("playerCards")),
+      coveredCards = createCardList("coveredCardStack"),
+      revealedCards = createCardList("openCardStack")
+    )
+  }
 
   def gameToJson(game: GameInterface): JsValue =
     Json.obj(
@@ -61,8 +65,10 @@ class FileIO extends FileIOInterface:
 
   def gameToString(game: GameInterface): String = gameToJson(game).toString
 
-  override def save(grid: GameInterface): Unit =
-    import java.io._
-    val pw = new PrintWriter(new File("game.json"))
-    pw.write(Json.prettyPrint(gameToJson(grid)))
-    pw.close()
+  override def save(grid: GameInterface): Try[Unit] =
+    Try {
+      import java.io._
+      val pw = new PrintWriter(new File("game.json"))
+      pw.write(Json.prettyPrint(gameToJson(grid)))
+      pw.close()
+    }

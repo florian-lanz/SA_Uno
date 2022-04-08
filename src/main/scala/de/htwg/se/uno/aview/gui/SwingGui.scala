@@ -341,7 +341,7 @@ class SwingGui(controller: ControllerInterface) extends Frame {
   }
 
   def buttons = new FlowPanel {
-    for (i <- 0 to 4) {
+    for (i <- 0 to 3) {
       val button = Button(
         if(i == 0) {
           "Random Game with 2 Players"
@@ -364,7 +364,7 @@ class SwingGui(controller: ControllerInterface) extends Frame {
         }
       }
       button.preferredSize_=(new Dimension(200,90))
-      if(i <= 3) {
+      if(i <= 2) {
         button.background = java.awt.Color.GREEN
       } else {
         button.background = java.awt.Color.RED

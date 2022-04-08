@@ -11,19 +11,14 @@ class UndoManager:
     redoStack = Nil
     command.doStep()
 
-  def undoStep(): Unit =
-    undoStack match {
-      case Nil =>
-      case head::stack =>
-        head.undoStep()
-        undoStack=stack
-        redoStack= head::redoStack
-    }
+  def undoStep(): Try[Unit] = Try {
+    undoStack.head.undoStep()
+    redoStack = undoStack.head :: redoStack
+    undoStack = undoStack.tail
+  }
 
-  def redoStep(): Unit =
-    redoStack match
-      case Nil => 
-      case head::stack =>
-        head.redoStep()
-        redoStack=stack
-        undoStack=head::undoStack
+  def redoStep(): Try[Unit] = Try {
+    redoStack.head.redoStep()
+    undoStack = redoStack.head :: undoStack
+    redoStack = redoStack.tail
+  }
