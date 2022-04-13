@@ -5,15 +5,7 @@ import scala.collection.mutable.{ListBuffer, Stack}
 import scala.swing.Color
 
 case class Enemy(enemyCards: List[Card] = List()):
-  def pushCard(card: Card): Enemy =
-    @tailrec
-    def pushCardRecursion(i: Int): Int =
-      if i < enemyCards.length then
-        if enemyCards(i).color == card.color && enemyCards(i).value == card.value then i
-        else pushCardRecursion(i + 1)
-      else -1
-    val index = pushCardRecursion(0)
-    if index != -1 then copy(enemyCards.take(index) ++ enemyCards.drop(index + 1)) else copy()
+  def pushCard(card: Card): Enemy = copy(enemyCards diff List(card))
 
   def pullCard(card: Card): Enemy = copy(card :: enemyCards)
 
@@ -51,15 +43,6 @@ case class Enemy(enemyCards: List[Card] = List()):
     
   def canPushPlusFour(card: Card, revealedCard: Card, revealedCardEffect: Int): Boolean =
     if card.value == Value.PlusFour && !(revealedCard.value == Value.PlusTwo && revealedCardEffect > 0) then
-      @tailrec
-      def canPushPlusFourRecursion(i: Int): Boolean =
-        if i < enemyCards.length then
-          if enemyCards(i).color == revealedCard.color && revealedCard.color != Color.Special && revealedCard.value != Value.PlusFour then 
-            false
-          else 
-            canPushPlusFourRecursion(i + 1)
-        else 
-          true
-      canPushPlusFourRecursion(0)
-    else 
+      enemyCards.forall(card => !(card.color == revealedCard.color && revealedCard.color != Color.Special && revealedCard.value != Value.PlusFour))
+    else
       false
