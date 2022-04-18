@@ -2,7 +2,7 @@ package de.htwg.se.uno.model.fileIoComponent.fileIoXmlImpl
 
 import com.google.inject.{Guice, Key}
 import com.google.inject.name.Names
-import de.htwg.se.uno.UnoModule
+//import de.htwg.se.uno.UnoModule
 import de.htwg.se.uno.model.fileIoComponent.FileIOInterface
 import de.htwg.se.uno.model.gameComponent.gameBaseImpl.*
 import de.htwg.se.uno.model.gameComponent.GameInterface
@@ -16,10 +16,17 @@ import scala.xml.{Node, PrettyPrinter}
 class FileIO extends FileIOInterface :
   override def load(source: String = "game.xml"): Try[GameInterface] = Try {
     val file = if source.equals("game.xml") then scala.xml.XML.loadFile(source) else scala.xml.XML.loadString(source)
-    val injector = Guice.createInjector(new UnoModule)
+    //val injector = Guice.createInjector(new UnoModule)
 
-    val numOfPlayers = (file \\ "game" \\ "@numOfPlayers").text.toInt
-    val game = injector.getInstance(Key.get(classOf[GameInterface], Names.named(numOfPlayers + " Players")))
+    //val numOfPlayers = (file \\ "game" \\ "@numOfPlayers").text.toInt
+    val numOfPlayers: 2 | 3 | 4 = 
+      (file \\ "game" \\ "@numOfPlayers").text.toInt match
+        case 2 => 2 
+        case 3 => 3
+        case 4 => 4
+        case _ => 2
+    //val game = injector.getInstance(Key.get(classOf[GameInterface], Names.named(numOfPlayers + " Players")))
+    val game = Game(numOfPlayers)
     val activePlayer = (file \\ "game" \ "@activePlayer").text.toInt
     val direction = (file \\ "game" \ "@direction").text.toBoolean
     val alreadyPulled = (file \\ "game" \ "@anotherPull").text.toBoolean

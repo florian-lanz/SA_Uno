@@ -1,7 +1,5 @@
-name := "SA_Uno"
-
-ThisBuild / version := "0.1.0-SNAPSHOT"
-
+name := "Persistence"
+version := "0.1.0-SNAPSHOT"
 ThisBuild / scalaVersion := "3.1.1"
 
 libraryDependencies += "org.scalactic" %% "scalactic" % "3.2.11"
@@ -14,7 +12,3 @@ libraryDependencies += "com.google.inject" % "guice" % "5.1.0"
 libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "2.0.1"
 
 libraryDependencies += "com.typesafe.play" %% "play-json" % "2.10.0-RC5"
-
-lazy val root = (project in file(".")).aggregate(persistence).dependsOn(model, persistence)
-lazy val model = project in file("Model")
-lazy val persistence = (project in file("Persistence")).dependsOn(model)
