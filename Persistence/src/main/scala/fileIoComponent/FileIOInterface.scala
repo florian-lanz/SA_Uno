@@ -1,6 +1,6 @@
-package de.htwg.se.uno.model.fileIoComponent
+package fileIoComponent
 
-import de.htwg.se.uno.model.gameComponent.GameInterface
+import model.gameComponent.GameInterface
 import play.api.libs.json.JsValue
 import scala.util.Try
 

@@ -1,4 +1,4 @@
-package de.htwg.se.uno.model.gameComponent.gameBaseImpl
+package model.gameComponent.gameBaseImpl
 
 import scala.annotation.tailrec
 

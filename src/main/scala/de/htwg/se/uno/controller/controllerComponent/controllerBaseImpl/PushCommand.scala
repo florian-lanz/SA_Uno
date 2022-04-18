@@ -1,6 +1,6 @@
 package de.htwg.se.uno.controller.controllerComponent.controllerBaseImpl
 
-import de.htwg.se.uno.util.Command
+import tools.util.Command
 import scala.util.{Failure, Success}
 import de.htwg.se.uno.controller.controllerComponent.GameChanged
 

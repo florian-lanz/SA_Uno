@@ -1,6 +1,6 @@
-package de.htwg.se.uno.model
+package model
 
-import de.htwg.se.uno.model.gameComponent.gameBaseImpl._
+import model.gameComponent.gameBaseImpl._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 

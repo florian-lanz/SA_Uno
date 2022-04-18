@@ -1,4 +1,4 @@
-package de.htwg.se.uno.model.gameComponent.gameBaseImpl
+package model.gameComponent.gameBaseImpl
 
 case class Card(color: Color, value: Value):
   override def toString: String = 

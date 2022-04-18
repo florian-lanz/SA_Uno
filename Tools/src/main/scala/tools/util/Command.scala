@@ -1,4 +1,4 @@
-package de.htwg.se.uno.util
+package tools.util
 
 trait Command:
   def doStep(): Unit

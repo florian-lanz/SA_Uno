@@ -1,10 +1,9 @@
-package de.htwg.se.uno.model.fileIoComponent.fileIoXmlImpl
+package fileIoComponent.fileIoJsonImpl
 
-import de.htwg.se.uno.model.gameComponent.GameInterface
+import model.gameComponent.GameInterface
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import de.htwg.se.uno.model.gameComponent.gameBaseImpl.*
-import play.api.libs.json.Json
+import model.gameComponent.gameBaseImpl.*
 
 import scala.util.{Failure, Success}
 
@@ -32,7 +31,7 @@ class FileIOSpec extends AnyWordSpec with Matchers {
         fileIO.save(oldGameTwoPlayers)
         var game = Game(4).createGame()
         fileIO.load() match
-          case Success(value) => 
+          case Success(value) =>
             game = value.asInstanceOf[Game]
             game.numOfPlayers should be (oldGameTwoPlayers.numOfPlayers)
             game.coveredCards should be (oldGameTwoPlayers.coveredCards)
@@ -82,9 +81,6 @@ class FileIOSpec extends AnyWordSpec with Matchers {
             game.alreadyPulled should be (oldGameFourPlayers.alreadyPulled)
           case Failure(e) => 1 should be (2)
       }
-//      "have a gameToJson function that does nothing" in {
-//        fileIO.gameToJson(oldGameTwoPlayers) should be (Json.obj())
-//      }
     }
   }
 }

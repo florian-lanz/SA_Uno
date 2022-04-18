@@ -2,7 +2,7 @@ package de.htwg.se.uno.aview
 
 import de.htwg.se.uno.controller.controllerComponent.GameEnded
 import de.htwg.se.uno.controller.controllerComponent.controllerBaseImpl.Controller
-import de.htwg.se.uno.model.gameComponent.gameBaseImpl._
+import model.gameComponent.gameBaseImpl._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 

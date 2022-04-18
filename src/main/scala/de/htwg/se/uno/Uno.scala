@@ -4,7 +4,6 @@ import com.google.inject.{Guice, Injector}
 import de.htwg.se.uno.aview.Tui
 import de.htwg.se.uno.aview.gui.SwingGui
 import de.htwg.se.uno.controller.controllerComponent.{ControllerInterface, GameSizeChanged}
-import de.htwg.se.uno.model.gameComponent.gameBaseImpl.CardStack
 
 import scala.io.StdIn.readLine
 

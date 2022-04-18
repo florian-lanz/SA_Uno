@@ -1,12 +1,12 @@
-package de.htwg.se.uno.model.fileIoComponent.fileIoJsonImpl
+package fileIoComponent.fileIoJsonImpl
 
 import com.google.inject.{Guice, Key}
 import com.google.inject.name.Names
 //import de.htwg.se.uno.UnoModule
-import de.htwg.se.uno.model.gameComponent.gameBaseImpl
-import de.htwg.se.uno.model.fileIoComponent.FileIOInterface
-import de.htwg.se.uno.model.gameComponent.gameBaseImpl.*
-import de.htwg.se.uno.model.gameComponent.GameInterface
+import model.gameComponent.gameBaseImpl
+import fileIoComponent.FileIOInterface
+import model.gameComponent.gameBaseImpl.*
+import model.gameComponent.GameInterface
 import play.api.libs.json.*
 
 import scala.annotation.tailrec

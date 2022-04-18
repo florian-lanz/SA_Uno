@@ -1,6 +1,6 @@
-package de.htwg.se.uno.model.gameComponent
+package model.gameComponent
 
-import de.htwg.se.uno.model.gameComponent.gameBaseImpl._
+import model.gameComponent.gameBaseImpl._
 
 trait GameInterface( val numOfPlayers: 2 | 3 | 4,
                      val coveredCards: List[Card],

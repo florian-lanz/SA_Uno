@@ -4,9 +4,9 @@ import com.google.inject.{Guice, Inject, Injector, Key}
 import com.google.inject.name.Names
 import de.htwg.se.uno.UnoModule
 import de.htwg.se.uno.controller.controllerComponent.*
-import de.htwg.se.uno.model.fileIoComponent.FileIOInterface
-import de.htwg.se.uno.model.gameComponent.GameInterface
-import de.htwg.se.uno.util.UndoManager
+import fileIoComponent.FileIOInterface
+import model.gameComponent.GameInterface
+import tools.util.UndoManager
 
 import scala.swing.{Color, Publisher}
 import scala.util.{Failure, Success}

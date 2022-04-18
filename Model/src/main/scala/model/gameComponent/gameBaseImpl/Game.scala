@@ -1,9 +1,9 @@
-package de.htwg.se.uno.model.gameComponent.gameBaseImpl
+package model.gameComponent.gameBaseImpl
 
 import com.fasterxml.jackson.annotation.JsonValue
 import com.google.inject.Inject
 import com.google.inject.name.Named
-import de.htwg.se.uno.model.gameComponent.GameInterface
+import model.gameComponent.GameInterface
 import scala.util.Random
 import scala.annotation.tailrec
 
