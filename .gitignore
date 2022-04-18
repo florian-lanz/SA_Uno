@@ -33,6 +33,7 @@ project/.sbtserver
 /.scalafmt.conf
 /.metals/
 /.vscode/
+/.bsp/
 /null/
 /project/.bloop
 /project/metals.sbt
