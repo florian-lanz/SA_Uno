@@ -9,30 +9,42 @@ class UndoManagerSpec extends AnyWordSpec {
   "A UndoManager" when {
     "new" should {
       val undoManager = new UndoManager()
-      val controller = new Controller(Game(4))
-      controller.createTestGame()
-      val command = new PullCommand(controller)
+      var controller = new Controller(Game(4))
+      controller.createGame(4)
+      var command = new PullCommand(controller)
       "Not be able to undo a Step" in {
         undoManager.undoStep()
-        controller.game.getActivePlayer should be(3)
+        controller.game.activePlayer should be(3)
       }
       "Not be able to redo a Step" in {
-        undoManager.redoStep
-        controller.game.getActivePlayer should be(3)
+        undoManager.redoStep()
+        controller.game.activePlayer should be(3)
       }
       "be able to do a Step" in {
-        controller.game.setSpecialTop(-1)
         undoManager.doStep(command)
-        controller.game.getActivePlayer should be(0)
+        controller.game.player.handCards.length should be(8)
       }
       "be able to undo a Step" in {
-        controller.game.setAnotherPull(true)
+        controller = Controller(Game(4))
+        controller.createGame(4)
+        command = PullCommand(controller)
+        controller.undoList = controller.fileIo.gameToString(controller.game) :: controller.undoList
+        undoManager.doStep(command)
+        controller.game.player.handCards.length should be(8)
         undoManager.undoStep()
-        controller.game.getAnotherPull should be(false)
+        controller.game.player.handCards.length should be(7)
       }
       "be able to redo a Step" in {
-        undoManager.redoStep
-        controller.game.getActivePlayer should be (1)
+        controller = Controller(Game(4))
+        controller.createGame(4)
+        command = PullCommand(controller)
+        controller.undoList = controller.fileIo.gameToString(controller.game) :: controller.undoList
+        undoManager.doStep(command)
+        controller.game.player.handCards.length should be(8)
+        undoManager.undoStep()
+        controller.game.player.handCards.length should be(7)
+        undoManager.redoStep()
+        controller.game.player.handCards.length should be(8)
       }
     }
   }

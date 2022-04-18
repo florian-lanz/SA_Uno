@@ -1,31 +1,24 @@
 package de.htwg.se.uno.util
 
-class UndoManager {
+import scala.util.Try
+
+class UndoManager:
   private var undoStack: List[Command]= Nil
   private var redoStack: List[Command]= Nil
-  def doStep(command: Command) = {
+
+  def doStep(command: Command): Unit =
     undoStack = command::undoStack
     redoStack = Nil
-    command.doStep
+    command.doStep()
+
+  def undoStep(): Try[Unit] = Try {
+    undoStack.head.undoStep()
+    redoStack = undoStack.head :: redoStack
+    undoStack = undoStack.tail
   }
-  def undoStep() = {
-    undoStack match {
-      case Nil =>
-      case head::stack => {
-        head.undoStep
-        undoStack=stack
-        redoStack= head::redoStack
-      }
-    }
+
+  def redoStep(): Try[Unit] = Try {
+    redoStack.head.redoStep()
+    undoStack = redoStack.head :: undoStack
+    redoStack = redoStack.tail
   }
-  def redoStep = {
-    redoStack match {
-      case Nil =>
-      case head::stack => {
-        head.redoStep
-        redoStack=stack
-        undoStack=head::undoStack
-      }
-    }
-  }
-}

@@ -262,7 +262,6 @@ class SwingGui(controller: ControllerInterface) extends Frame {
   menuBar = new MenuBar {
     contents += new Menu("File") {
       mnemonic = Key.F
-      contents += new MenuItem(Action("Test") {controller.createTestGame()})
       contents += new Menu("Random") {
         mnemonic = Key.R
         contents += new MenuItem(Action("2 Players") {controller.createGame(2)})
@@ -342,34 +341,30 @@ class SwingGui(controller: ControllerInterface) extends Frame {
   }
 
   def buttons = new FlowPanel {
-    for (i <- 0 to 4) {
+    for (i <- 0 to 3) {
       val button = Button(
         if(i == 0) {
-          "New Testgame"
-        } else if(i == 1) {
           "Random Game with 2 Players"
-        } else if(i == 2) {
+        } else if(i == 1) {
           "Random Game with 3 Players"
-        } else if (i == 3){
+        } else if (i == 2){
           "Random Game with 4 Players"
         }else {
           "Quit"
         }
       ) {
         if(i == 0) {
-          controller.createTestGame()
-        } else if(i == 1) {
           controller.createGame(2)
-        } else if(i == 2) {
+        } else if(i == 1) {
           controller.createGame(3)
-        } else if (i == 3){
+        } else if (i == 2){
           controller.createGame(4)
         } else {
           System.exit(0)
         }
       }
       button.preferredSize_=(new Dimension(200,90))
-      if(i <= 3) {
+      if(i <= 2) {
         button.background = java.awt.Color.GREEN
       } else {
         button.background = java.awt.Color.RED

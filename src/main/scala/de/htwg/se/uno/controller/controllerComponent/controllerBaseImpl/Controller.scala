@@ -9,262 +9,208 @@ import de.htwg.se.uno.model.gameComponent.GameInterface
 import de.htwg.se.uno.util.UndoManager
 
 import scala.swing.{Color, Publisher}
+import scala.util.{Failure, Success}
 
-class Controller @Inject() (var game: GameInterface) extends ControllerInterface with Publisher {
+class Controller @Inject() (var game: GameInterface) extends ControllerInterface with Publisher:
   private var undoManager = new UndoManager
   val injector: Injector = Guice.createInjector(new UnoModule)
   val fileIo: FileIOInterface = injector.getInstance(classOf[FileIOInterface])
   private var controllerEventString = "Du bist dran. Mögliche Befehle: q, n, t, s [Karte], g, u, r"
   private var savedSpecialCard = ""
+  var undoList: List[String] = List()
+  var redoList: List[String] = List()
 
-  def createGame(size: Int):Unit = {
-    size match {
-      case 2 => game = injector.getInstance(Key.get(classOf[GameInterface], Names.named("2 Players")))
-      case 3 => game = injector.getInstance(Key.get(classOf[GameInterface], Names.named("3 Players")))
-      case 4 => game = injector.getInstance(Key.get(classOf[GameInterface], Names.named("4 Players")))
-      case _ =>
-    }
+  def createGame(size: Int): Unit =
+    game = injector.getInstance(Key.get(classOf[GameInterface], Names.named(size + " Players")))
     game = game.createGame()
+    initialize()
+
+  def initialize(): Unit =
     savedSpecialCard = ""
     undoManager = new UndoManager
+    undoList = List()
+    redoList = List()
     controllerEvent("yourTurn")
     publish(new GameSizeChanged)
-  }
 
-  def createTestGame():Unit = {
-    game = injector.getInstance(Key.get(classOf[GameInterface], Names.named("4 Players")))
-    game = game.createTestGame()
-    savedSpecialCard = ""
-    undoManager = new UndoManager
-    controllerEvent("yourTurn")
-    publish(new GameSizeChanged)
-  }
-
-  def set(string:String, color : Int = 0): Unit = {
-    if (string.charAt(0) != 'S' || color != 0) {
-      if (game.nextTurn()) {
+  def set(string: String, color: Int = 0): Unit =
+    if string.charAt(0) != 'S' || color != 0 then
+      if game.nextTurn() then
         val s = gameToString
-        game = game.setActivePlayer()
+        undoList = fileIo.gameToString(game).toString :: undoList
+        game = game.changeActivePlayer()
         undoManager.doStep(new PushCommand(string, color, this))
-        if (!s.equals(gameToString)) {
+        if !s.equals(gameToString) then
           controllerEvent("enemyTurn")
-          game = game.setAnotherPull()
+          game = game.copyGame(alreadyPulled = false)
           publish(new GameChanged)
           won()
-        } else {
-          game = game.setDirection()
-          game = game.setActivePlayer()
-          game = game.setDirection()
+        else
+          resetActivePlayer()
           controllerEvent("pushCardNotAllowed")
           publish(new GameNotChanged)
-        }
-      } else {
+      else
         controllerEvent("enemyTurn")
         publish(new GameNotChanged)
-      }
-    } else {
+    else
       savedSpecialCard = string
       controllerEvent("chooseColor")
       publish(new ChooseColor)
-    }
-  }
-  def get(): Unit = {
-    if (game.nextTurn()) {
-      val b = game.getAnotherPull
-      game = game.setActivePlayer()
-      val activePlayer = game.getActivePlayer
+
+  def get(): Unit =
+    if game.nextTurn() then
+      val b = game.alreadyPulled
+      undoList = fileIo.gameToString(game) :: undoList
+      game = game.changeActivePlayer()
+      val activePlayer = game.activePlayer
       undoManager.doStep(new PullCommand(this))
-      val activePlayer2 = game.getActivePlayer
+      val activePlayer2 = game.activePlayer
       controllerEvent("enemyTurn")
-      if (b) {
-        game = game.setAnotherPull()
-      }
-      if (game.getAnotherPull) {
-        game = game.setDirection()
-        game = game.setActivePlayer()
-        game = game.setDirection()
+      if b then
+        game = game.copyGame(alreadyPulled = false)
+      if game.alreadyPulled then
+        resetActivePlayer()
         controllerEvent("yourTurn")
-      }
-      if (activePlayer != activePlayer2) {
-        game = game.setDirection()
-        game = game.setActivePlayer()
-        game = game.setDirection()
+      if activePlayer != activePlayer2 then
+        resetActivePlayer()
         controllerEvent("pullCardNotAllowed")
-      }
       publish(new GameChanged)
       shuffle()
-    } else {
+    else
       controllerEvent("enemyTurn")
       publish(new GameNotChanged)
-    }
-  }
-  def enemy(): Unit = {
-    if game.nextEnemy() == 1 then
-      game = game.setActivePlayer()
-      undoManager.doStep(new EnemyCommand(this))
-    else if game.nextEnemy() == 2 then
-      game = game.setActivePlayer()
-      undoManager.doStep(new EnemyCommand2(this))
-    else
-      game = game.setActivePlayer()
-      undoManager.doStep(new EnemyCommand3(this))
 
-    if game.nextTurn() then
-      controllerEvent("yourTurn")
-    else
+  def enemy(): Unit =
+    val enemyIndex = game.nextEnemy() - 1
+    undoList = fileIo.gameToString(game).toString :: undoList
+    game = game.changeActivePlayer()
+    undoManager.doStep(EnemyCommand(this, enemyIndex))
+    if game.nextTurn() then controllerEvent("yourTurn")
+    else controllerEvent("enemyTurn")
+    if game.alreadyPulled then
+      resetActivePlayer()
       controllerEvent("enemyTurn")
-
-    if game.getAnotherPull then
-      game.setDirection()
-      game.setActivePlayer()
-      game.setDirection()
-      controllerEvent("enemyTurn")
-
     publish(new GameChanged)
     shuffle()
     won()
-  }
 
-  def undo(): Unit = {
-    undoManager.undoStep()
-    if (game.getUndoVariable) {
-      game.setDirection()
-      game.setActivePlayer()
-      game.setDirection()
-    }
-    while (!game.nextTurn()) {
-      undoManager.undoStep()
-      if (game.getUndoVariable) {
-        game.setDirection()
-        game.setActivePlayer()
-        game.setDirection()
-      }
-    }
-    controllerEvent("undo")
+  def undo(): Unit =
+    var result = undoManager.undoStep()
+    result match
+      case Success(value) =>
+        controllerEvent("undo")
+        while !game.nextTurn() do
+          result = undoManager.undoStep()
+          result match
+            case Success(value) => controllerEvent("undo")
+            case Failure(e) =>
+              controllerEvent("couldNotUndo")
+      case Failure(e) =>
+        controllerEvent("couldNotUndo")
     publish(new GameChanged)
     won()
-  }
-  def redo(): Unit = {
-    game = game.setRedoVariable()
-    game.setActivePlayer()
-    undoManager.redoStep
-    if (game.getRedoVariable){
-      game = game.setDirection()
-      game = game.setActivePlayer()
-      game = game.setDirection()
-    }
-    controllerEvent("redo")
+
+  def redo(): Unit =
+    val result = undoManager.redoStep()
+    result match
+      case Success(value) => controllerEvent("redo")
+      case Failure(e) => controllerEvent("couldNotRedo")
     publish(new GameChanged)
     shuffle()
     won()
-  }
 
-  def save(): Unit = {
-    fileIo.save(game)
-    controllerEvent("save")
+  def save(): Unit =
+    val result = fileIo.save(game)
+    result match
+      case Success(value) => controllerEvent("save")
+      case Failure(e) => controllerEvent("couldNotSave")
     publish(new GameChanged)
-  }
 
-  def load(): Unit = {
-    game = fileIo.load
-    savedSpecialCard = ""
-    undoManager = new UndoManager
-    controllerEvent("load")
+  def load(): Unit =
+    val result = fileIo.load()
+    result match
+      case Success(value) =>
+        game = value
+        savedSpecialCard = ""
+        undoManager = new UndoManager
+        controllerEvent("load")
+      case _ =>
+        controllerEvent("couldNotLoad")
     publish(new GameChanged)
-  }
 
-  def won(): Unit = {
-    if(game.getLength(4) == 0) {
+  def won(): Unit =
+    if game.player.handCards.isEmpty then
       controllerEvent("won")
       publish(new GameEnded)
-    } else if(game.getLength(0) == 0) {
+    else if game.enemies.head.enemyCards.isEmpty then
       controllerEvent("lost")
       publish(new GameEnded)
-    } else if (game.getNumOfPlayers >= 3 &&game.getLength(1) == 0) {
+    else if game.numOfPlayers >= 3 && game.enemies(1).enemyCards.isEmpty then
       controllerEvent("lost")
       publish(new GameEnded)
-    } else if (game.getNumOfPlayers >= 4 &&game.getLength(2) == 0) {
+    else if game.numOfPlayers >= 4 && game.enemies(2).enemyCards.isEmpty then
       controllerEvent("lost")
       publish(new GameEnded)
-    } else {
+    else
       controllerEvent("idle")
-    }
-  }
 
-  def shuffle(): Unit = {
-    if(game.getLength(5) <= 16) {
+  def shuffle(): Unit =
+    if game.coveredCards.length <= 16 then
+      undoList = fileIo.gameToString(game) :: undoList
       undoManager.doStep(new ShuffleCommand(this))
       controllerEvent("shuffled")
       publish(new GameChanged)
-    } else {
+    else
       controllerEvent("idle")
-    }
-  }
+
+  def getLength(list: Int): Int =
+    list match
+      case 0 | 1 | 2 => game.enemies(list).enemyCards.length
+      case 3         => game.revealedCards.length
+      case 4         => game.player.handCards.length
+      case _         => game.coveredCards.length
+
+  def getCardText(list: Int, index: Int): String =
+    if list == 3 && index == 1 then game.revealedCards.head.toString
+    else if list == 3 && index == 2 then "Do Step"
+    else if list == 4 then game.player.handCards(index).toString
+    else "Uno"
+
+  def getGuiCardText(list: Int, index: Int): String =
+    if list == 3 && index == 1 then game.revealedCards.head.toGuiString
+    else if list == 3 && index == 2 then "Do Step"
+    else if list == 4 then game.player.handCards(index).toGuiString
+    else "Uno"
+
+  def resetActivePlayer(): Unit =
+    game = game.copyGame(direction = !game.direction)
+    game = game.changeActivePlayer()
+    game = game.copyGame(direction = !game.direction)
 
   def gameToString: String = game.toString
-  def getCardText(list : Int, index : Int) : String = game.getCardText(list, index)
-  def getGuiCardText(list : Int, index : Int) : String = game.getGuiCardText(list, index)
-  def getLength(list : Int) : Int = game.getLength(list)
-  def getNumOfPlayers: 2 | 3 | 4 = game.getNumOfPlayers
-  def nextTurn() : Boolean = game.nextTurn()
+  def getNumOfPlayers: 2 | 3 | 4 = game.numOfPlayers
+  def nextTurn(): Boolean = game.nextTurn()
   def getHs2: String = savedSpecialCard
-  def nextEnemy() : Int = game.nextEnemy()
+  def nextEnemy(): Int = game.nextEnemy()
 
-  def controllerEvent(string : String) : String = {
-    string match {
-      case "pushCardNotAllowed" => {
-        controllerEventString = "Du kannst diese Karte nicht legen"
-        controllerEventString
-      }
-      case "enemyTurn" => {
-        controllerEventString = "Gegner ist an der Reihe"
-        controllerEventString
-      }
-      case "pullCardNotAllowed" => {
-        controllerEventString = "Du kannst keine Karte ziehen"
-        controllerEventString
-      }
-      case "unknownCommand" => {
-        controllerEventString = "Befehl nicht bekannt"
-        controllerEventString
-      }
-      case "yourTurn" => {
-        controllerEventString = "Du bist dran. Mögliche Befehle: q, n [2 | 3 | 4], t, s Karte [Farbe], g, u, r, d, sv, ld"
-        controllerEventString
-      }
-      case "won" => {
-        controllerEventString = "Glückwunsch, du hast gewonnen!"
-        controllerEventString
-      }
-      case "lost" => {
-        controllerEventString = "Du hast leider verloren"
-        controllerEventString
-      }
-      case "undo" => {
-        controllerEventString = "Zug rückgängig gemacht"
-        controllerEventString
-      }
-      case "redo" => {
-        controllerEventString = "Zug wiederhergestellt"
-        controllerEventString
-      }
-      case "save" => {
-        controllerEventString = "Spiel gespeichert"
-        controllerEventString
-      }
-      case "load" => {
-        controllerEventString = "Spiel geladen"
-        controllerEventString
-      }
-      case "chooseColor" => {
-        controllerEventString = "Wähle eine Farbe"
-        controllerEventString
-      }
-      case "shuffled" => {
-        controllerEventString = "Verdeckter Kartenstapel wurde neu gemischt"
-        controllerEventString
-      }
+  def controllerEvent(string: String): String =
+    controllerEventString = string match
+      case "pushCardNotAllowed" => "Du kannst diese Karte nicht legen"
+      case "enemyTurn" => "Gegner ist an der Reihe"
+      case "pullCardNotAllowed" => "Du kannst keine Karte ziehen"
+      case "unknownCommand" => "Befehl nicht bekannt"
+      case "yourTurn" => "Du bist dran. Mögliche Befehle: q, n [2 | 3 | 4], t, s Karte [Farbe], g, u, r, d, sv, ld"
+      case "won" => "Glückwunsch, du hast gewonnen!"
+      case "lost" => "Du hast leider verloren"
+      case "undo" => "Zug rückgängig gemacht"
+      case "redo" => "Zug wiederhergestellt"
+      case "save" => "Spiel gespeichert"
+      case "load" => "Spiel geladen"
+      case "couldNotLoad" => "Konnte keinen Spielstand laden!"
+      case "couldNotSave" => "Spielstand konnte nicht gespeichert werden"
+      case "couldNotUndo" => "Es konnte Kein Spielzug rückgängig gemacht werden"
+      case "couldNotRedo" => "Es konnte kein Spielzug wiederhergestellt werden"
+      case "chooseColor" => "Wähle eine Farbe"
+      case "shuffled" => "Verdeckter Kartenstapel wurde neu gemischt"
       case "idle" => controllerEventString
-    }
-  }
-}
+    controllerEventString
