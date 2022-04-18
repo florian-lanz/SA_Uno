@@ -2,12 +2,10 @@ package de.htwg.se.uno.controller.controllerComponent
 
 import scala.swing.{Color, Publisher}
 
-trait ControllerInterface extends Publisher {
-
-  def createGame(size: Int = 7):Unit
-  def createTestGame():Unit
+trait ControllerInterface extends Publisher:
+  def createGame(size: Int):Unit
   def gameToString: String
-  def set(string:String, color : Int = 0): Unit
+  def set(string: String, color: Int): Unit
   def get(): Unit
   def enemy(): Unit
   def undo(): Unit
@@ -23,8 +21,6 @@ trait ControllerInterface extends Publisher {
   def nextTurn() : Boolean
   def getHs2: String
   def nextEnemy() : Int
-}
-
 
 import scala.swing.event.Event
 

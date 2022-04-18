@@ -9,185 +9,79 @@ import scala.collection.mutable.ListBuffer
 class EnemySpec extends AnyWordSpec {
   "A Enemy" when {
     "new" should {
-      var newGame = Game(4)
-      newGame.init = InitializeGameStrategy(1)
-      newGame.init = newGame.init.initializeGame(4)
-      "Be able to do the enemys run" in {
-        newGame = newGame.createTestGame()
-        newGame.init.player.handCards = newGame.init.player.handCards.drop(8)
-        newGame.activePlayer = 3
-        newGame.init.enemy3.enemy(newGame) should be (newGame.init.enemy3)
+      val greenNine = Card(Color.Green, Value.Nine)
+      val greenSuspend = Card(Color.Green, Value.Suspend)
+      val redZero = Card(Color.Red, Value.Zero)
+      val redColorChange = Card(Color.Red, Value.ColorChange)
+      val blueNine = Card(Color.Blue, Value.Nine)
+      val bluePlusTwo = Card(Color.Blue, Value.PlusTwo)
+      val yellowPlusFour = Card(Color.Yellow, Value.PlusFour)
+      val yellowSuspend = Card(Color.Yellow, Value.Suspend)
+      val specialPlusFour = Card(Color.Special, Value.PlusFour)
+      val enemy = Enemy(List(greenNine))
+      "be able to push a card from the enemy cards" in {
+        enemy.pushCard(greenNine).enemyCards should be (List())
       }
-      "Be able to do the enemy's run again" in {
-        newGame = newGame.createTestGame()
-        newGame.init.enemy2.enemyCards = newGame.init.enemy2.enemyCards.drop(8)
-        newGame.activePlayer = 1
-        newGame.init.enemy.enemy(newGame) should be (newGame.init.enemy)
+      "not be able to push a card not contained in the enemy cards" in {
+        enemy.pushCard(redZero).enemyCards should be (List(greenNine))
       }
-      "Be able to do the enemy's run a third time" in {
-        newGame = newGame.createTestGame()
-        newGame.pushMove("R+2", 0)
-        newGame.activePlayer = 1
-        newGame.init.enemy.enemy(newGame) should be (newGame.init.enemy)
+      "be able to pull a card" in {
+        enemy.pullCard(redZero).enemyCards should be (List(redZero, greenNine))
       }
-      "Be able to do the enemy's run a fourth time" in {
-        newGame = newGame.createTestGame()
-        newGame.activePlayer = 1
-        newGame.init.enemy.enemy(newGame) should be (newGame.init.enemy)
+      "be able to push a draw card" in {
+        enemy.shouldPushDrawCard(bluePlusTwo, bluePlusTwo, 2) should be (true)
       }
-      "Be able to do the enemy's run a fifth time" in {
-        newGame = newGame.createTestGame()
-        newGame.init.enemy.enemyCards = newGame.init.enemy.enemyCards.take(2) ++ newGame.init.enemy.enemyCards.drop(4)
-        newGame.activePlayer = 1
-        newGame.init.enemy.enemy(newGame) should be (newGame.init.enemy)
+      "not be able to push a draw card" in {
+        enemy.shouldPushDrawCard(bluePlusTwo, greenNine, 0) should be (false)
       }
-      "Be able to do the enemy's run a sixth time" in {
-        newGame = newGame.createTestGame()
-        newGame.init.cardsRevealed = Card(Color.Blue, Value.Four) +: newGame.init.cardsRevealed
-        newGame.activePlayer = 1
-        newGame.init.enemy.enemy(newGame) should be (newGame.init.enemy)
+      "be able to push a basic card with the same color" in {
+        enemy.canPushBasicCardWithSameColor(greenNine, greenNine, 0) should be (true)
       }
-      "Be able to do the enemy's run a seventh time" in {
-        newGame = newGame.createTestGame()
-        newGame.init.cardsRevealed = Card(Color.Blue, Value.DirectionChange) +: newGame.init.cardsRevealed
-        newGame.activePlayer = 1
-        newGame.init.enemy.enemy(newGame) should be (newGame.init.enemy)
+      "not be able to push a basic card with the same color" in {
+        enemy.canPushBasicCardWithSameColor(blueNine, bluePlusTwo, 2) should be (false)
       }
-      "Be able to do the enemy's run a eigth time" in{
-        newGame = newGame.createTestGame()
-        newGame.init.enemy.enemyCards = Card(Color.Special, Value.ColorChange) +: newGame.init.enemy.enemyCards.drop(9)
-        newGame.activePlayer = 1
-        newGame.init.enemy.enemy(newGame) should be (newGame.init.enemy)
+      "be able to push a suspension or direction change card with the same color" in {
+        enemy.canPushSuspendOrDirectionChangeWithSameColor(greenSuspend, greenNine, 0) should be (true)
       }
-      "Be able to do the enemy's run a nineth time" in{
-        newGame = newGame.createTestGame()
-        newGame.init.enemy.enemyCards = newGame.init.enemy.enemyCards.drop(3)
-        newGame.init.cardsRevealed = Card(Color.Blue, Value.Five) +: newGame.init.cardsRevealed
-        newGame.activePlayer = 1
-        newGame.init.enemy.enemy(newGame) should be (newGame.init.enemy)
+      "not be able to push a suspension or direction change card with the same color" in {
+        enemy.canPushSuspendOrDirectionChangeWithSameColor(greenSuspend, redZero, 0) should be (false)
       }
-      "Be able to do the enemy's run a tenth time" in{
-        newGame = newGame.createTestGame()
-        newGame.init.cardsRevealed = Card(Color.Special, Value.ColorChange) +: newGame.init.cardsRevealed
-        newGame.init.enemy.enemyCards = newGame.init.enemy.enemyCards.drop(7)
-        newGame.activePlayer = 1
-        newGame.init.enemy.enemy(newGame) should be (newGame.init.enemy)
+      "be able to push a basic card with the same value" in {
+        enemy.canPushBasicCardWithSameValue(blueNine, greenNine, 0) should be (true)
       }
-      "Be able to do the enemy's run a eleventh time" in{
-        newGame = newGame.createTestGame()
-        newGame.init.enemy.enemyCards = newGame.init.enemy.enemyCards.drop(8)
-        newGame.activePlayer = 1
-        newGame.init.enemy.enemy(newGame) should be (newGame.init.enemy)
+      "not be able to push a basic card with the same value" in {
+        enemy.canPushBasicCardWithSameValue(bluePlusTwo, blueNine, 0) should be (false)
       }
-      "Be able to do the enemy's run a twelth time" in{
-        newGame = newGame.createTestGame()
-        newGame.init.enemy.enemyCards = newGame.init.enemy.enemyCards.take(1)
-        newGame.activePlayer = 1
-        newGame.init.enemy.enemy(newGame) should be (newGame.init.enemy)
+      "be able to push a suspension or direction change card with the same value" in {
+        enemy.canPushSuspendOrDirectionChangeWithSameValue(greenSuspend, yellowSuspend, 0) should be (true)
       }
-      "Be able to do the enemy's run a thirteenth time" in{
-        newGame = newGame.createTestGame()
-        newGame.init.cardsRevealed = Card(Color.Blue, Value.Five) +: newGame.init.cardsRevealed
-        newGame.init.enemy.enemyCards = newGame.init.enemy.enemyCards.drop(7)
-        newGame.activePlayer = 1
-        newGame.init.enemy.enemy(newGame) should be (newGame.init.enemy)
+      "not be able to push a suspension or direction change card with the same value" in {
+        enemy.canPushSuspendOrDirectionChangeWithSameValue(greenSuspend, redZero, 0) should be (false)
       }
-      "Be able to do the enemy's run a fourteenth time" in{
-        newGame = newGame.createTestGame()
-        newGame.init.cardsRevealed = Card(Color.Blue, Value.Five) +: newGame.init.cardsRevealed
-        newGame.init.enemy.enemyCards = newGame.init.enemy.enemyCards.drop(7)
-        newGame.activePlayer = 1
-        newGame.anotherPull = true
-        newGame.init.enemy.enemy(newGame) should be (newGame.init.enemy)
+      "be able to push a color change card" in {
+        enemy.canPushColorChange(redColorChange, greenNine, 0) should be (true)
       }
-
-      "Be able to undo a move" in {
-        newGame = newGame.createTestGame()
-        newGame.init.enemy.pulledCardsStack.push(" ")
-        newGame.init.enemy.pushedCardIndexStack.push(2)
-        newGame.init.enemy.pushedCardsStack.push(Card(Color.Blue, Value.DirectionChange))
-        newGame.special.push(0)
-        newGame.init.enemy.undo(newGame) should be(newGame.init.enemy)
+      "not be able to push a color change card" in {
+        enemy.canPushColorChange(redColorChange, yellowPlusFour, 4) should be (false)
       }
-      "Be able to undo a second move" in {
-        newGame = newGame.createTestGame()
-        newGame.init.enemy.pulledCardsStack.push("Start")
-        newGame.init.enemy.pushedCardIndexStack.push(-1)
-        newGame.special.push(0)
-        newGame.init.enemy.undo(newGame) should be(newGame.init.enemy)
+      "be able to push on a special card" in {
+        enemy.canPushOnSpecial(greenNine, specialPlusFour, 4) should be (true)
       }
-      "Be able to undo a third move" in {
-        newGame = newGame.createTestGame()
-        newGame.init.enemy.pulledCardsStack.push("R 1")
-        newGame.init.enemy.pushedCardIndexStack.push(-1)
-        newGame.init.enemy.anotherPullStack.push(true)
-        newGame.special.push(0)
-        newGame.init.enemy.undo(newGame) should be(newGame.init.enemy)
+      "not be able to push on a special card" in {
+        enemy.canPushOnSpecial(greenNine, yellowPlusFour, 4) should be (false)
       }
-      "Be able to undo a fourth move" in {
-        newGame = newGame.createTestGame()
-        newGame.init.enemy.pulledCardsStack.push("Start")
-        newGame.init.enemy.pushedCardIndexStack.push(-1)
-        newGame.init.enemy.anotherPullStack.push(true)
-        newGame.special.push(4)
-        newGame.special.push(0)
-        newGame.init.enemy.pulledCardsStack.push("R 1")
-        newGame.init.enemy.pushedCardIndexStack.push(-1)
-        newGame.init.enemy.pulledCardsStack.push("R S")
-        newGame.init.enemy.pushedCardIndexStack.push(-1)
-        newGame.init.enemy.pulledCardsStack.push("R+2")
-        newGame.init.enemy.pushedCardIndexStack.push(-1)
-        newGame.init.enemy.undo(newGame) should be(newGame.init.enemy)
+      "be able to push a plus two card" in {
+        enemy.canPushPlusTwo(bluePlusTwo, blueNine, 0) should be (true)
       }
-
-
-      "Be able to push a Card of the Enemy's Cards" in {
-        newGame = newGame.createTestGame()
-        newGame.init.enemy.enemyCards = Card(Color.Yellow, Value.Six) +: newGame.init.enemy.enemyCards.take(2) :++
-          Card(Color.Yellow, Value.Seven) +: newGame.init.enemy.enemyCards.drop(2) :++ Card(Color.Green, Value.Seven) +:
-          ListBuffer[Card](Card(Color.Blue, Value.Seven))
-        newGame.init.enemy.pushCardEnemy(Card(Color.Special, Value.ColorChange), newGame) should be(newGame.init.enemy)
+      "not be able to push a plus two card" in {
+        enemy.canPushPlusTwo(bluePlusTwo, yellowPlusFour, 4) should be (false)
       }
-      "Be able to push another Card of the Enemy's Cards" in {
-        newGame = newGame.createTestGame()
-        newGame.init.enemy.pushCardEnemy(Card(Color.Red, Value.PlusTwo), newGame) should be(newGame.init.enemy)
+      "be able to push a plus four card" in {
+        enemy.canPushPlusFour(yellowPlusFour, blueNine, 0) should be (true)
       }
-      "Be able to push a third Card of the Enemy's Cards" in {
-        newGame = newGame.createTestGame()
-        newGame.init.enemy.pushCardEnemy(Card(Color.Red, Value.Suspend), newGame) should be(newGame.init.enemy)
-      }
-      "Be able to push a fourth Card of the Enemy's Cards" in {
-        newGame = newGame.createTestGame()
-        newGame.init.enemy.pushCardEnemy(Card(Color.Red, Value.DirectionChange), newGame) should be(newGame.init.enemy)
-      }
-      "Be able to push a fifth Card of the Enemy's Cards" in {
-        newGame = newGame.createTestGame()
-        newGame.init.enemy.pushCardEnemy(Card(Color.Special, Value.PlusFour), newGame) should be(newGame.init.enemy)
-      }
-
-      "Be able to pull a Card" in {
-        newGame = newGame.createTestGame()
-        newGame.init.enemy.pullEnemy(newGame) should be(newGame.init.enemy)
-      }
-      "Be able to pull another Card" in {
-        newGame = newGame.createTestGame()
-        newGame.special.push(4)
-        newGame.init.enemy.pullEnemy(newGame) should be(newGame.init.enemy)
-      }
-
-      "Should have a ki" in {
-        newGame = newGame.createTestGame()
-        newGame.init.enemy.enemyCards = newGame.init.enemy.enemyCards.take(2)
-        newGame.init.enemy.ki(newGame) should be(newGame.init.enemy)
-      }
-      "Should have a second ki" in {
-        newGame = newGame.createTestGame()
-        newGame.init.enemy.ki(newGame) should be(newGame.init.enemy)
-      }
-      "Should have a third ki" in {
-        newGame = newGame.createTestGame()
-        newGame.init.enemy.enemyCards = newGame.init.enemy.enemyCards.take(8)
-        newGame.init.enemy.ki(newGame) should be(newGame.init.enemy)
+      "not be able to push a plus four card" in {
+        enemy.canPushPlusFour(yellowPlusFour, greenNine, 0) should be (false)
+        enemy.canPushPlusFour(yellowPlusFour, bluePlusTwo, 2) should be (false)
       }
     }
   }

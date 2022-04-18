@@ -2,13 +2,15 @@ package de.htwg.se.uno.aview
 
 import de.htwg.se.uno.controller.controllerComponent.GameEnded
 import de.htwg.se.uno.controller.controllerComponent.controllerBaseImpl.Controller
-import de.htwg.se.uno.model.gameComponent.gameBaseImpl.Game
+import de.htwg.se.uno.model.gameComponent.gameBaseImpl._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
 class TuiSpec extends AnyWordSpec with Matchers {
 
   "A Game Tui" should {
+    val redOne = Card(Color.Red, Value.One)
+    val colorChange = Card(Color.Special, Value.ColorChange)
     val controller = new Controller(Game(2))
     val tui = new Tui(controller)
     "create a Game on input 'n'" in {
@@ -29,10 +31,6 @@ class TuiSpec extends AnyWordSpec with Matchers {
       tui.processInputLine("Something")
       controller.gameToString should be(old)
     }
-    "Create a test Game on input 't'" in {
-      tui.processInputLine("t")
-      controller.getNumOfPlayers should be(4)
-    }
     "Not do anything on input d if it's your turn" in {
       tui.processInputLine("d")
       controller.controllerEvent("idle") should be(controller.controllerEvent("yourTurn"))
@@ -43,25 +41,31 @@ class TuiSpec extends AnyWordSpec with Matchers {
       controller.gameToString should be(old)
     }
     "Set a Card on input s [Karte]" in {
-      tui.processInputLine("s " + controller.getCardText(4, 2))
+      controller.game = controller.game.copyGame(player = Player(redOne :: controller.game.player.handCards), revealedCards = redOne :: controller.game.revealedCards)
+      tui.processInputLine("s R 1")
       controller.nextTurn() should be (false)
     }
     "Do the Enemys Run" in {
+      controller.game = controller.game.copyGame(enemies = List(Enemy(redOne :: controller.game.enemies.head.enemyCards),
+        Enemy(redOne :: controller.game.enemies(1).enemyCards), Enemy(redOne :: controller.game.enemies(2).enemyCards)),
+        revealedCards = redOne :: controller.game.revealedCards)
       tui.processInputLine("d")
       tui.processInputLine("d")
       tui.processInputLine("d")
       controller.nextTurn() should be(true)
     }
     "Set another Card on input s [Karte]" in {
-      tui.processInputLine("s " + controller.getCardText(4, 1) + " blue")
-      controller.game.getLength(4) should be (7)
+      controller.game = controller.game.copyGame(player = Player(colorChange :: controller.game.player.handCards), revealedCards = redOne :: controller.game.revealedCards, revealedCardEffect = 0)
+      tui.processInputLine("s S C blue")
+      controller.nextTurn() should be (false)
     }
     "Undo a Step" in {
       tui.processInputLine("u")
       controller.nextTurn() should be(true)
     }
     "Set a third Card on input s [Karte]" in {
-      tui.processInputLine("s " + controller.getCardText(4, 1) + " green")
+      controller.game = controller.game.copyGame(player = Player(colorChange :: controller.game.player.handCards), revealedCards = redOne :: controller.game.revealedCards, revealedCardEffect = 0)
+      tui.processInputLine("s S C green")
       controller.nextTurn() should be(false)
     }
     "Undo another Step" in {
@@ -69,7 +73,8 @@ class TuiSpec extends AnyWordSpec with Matchers {
       controller.nextTurn() should be(true)
     }
     "Set a fourth Card on input s [Karte]" in {
-      tui.processInputLine("s " + controller.getCardText(4, 1) + " yellow")
+      controller.game = controller.game.copyGame(player = Player(colorChange :: controller.game.player.handCards), revealedCards = redOne :: controller.game.revealedCards, revealedCardEffect = 0)
+      tui.processInputLine("s S C yellow")
       controller.nextTurn() should be(false)
     }
     "Undo a third Step" in {
@@ -77,7 +82,8 @@ class TuiSpec extends AnyWordSpec with Matchers {
       controller.nextTurn() should be(true)
     }
     "Set a fifth Card on input s [Karte]" in {
-      tui.processInputLine("s " + controller.getCardText(4, 1) + " red")
+      controller.game = controller.game.copyGame(player = Player(colorChange :: controller.game.player.handCards), revealedCards = redOne :: controller.game.revealedCards, revealedCardEffect = 0)
+      tui.processInputLine("s S C red")
       controller.nextTurn() should be(false)
     }
     "Undo a fourth Step" in {
@@ -100,8 +106,16 @@ class TuiSpec extends AnyWordSpec with Matchers {
     }
     "Redo a Step on Input 'r' if possible" in {
       val old = controller.gameToString
-      tui.processInputLine("r")
+      tui.processInputLine("g")
       controller.gameToString should not be old
+
+
+      tui.processInputLine("u")
+      controller.nextTurn() should be(true)
+
+      val old2 = controller.gameToString
+      tui.processInputLine("r")
+      controller.gameToString should not be old2
     }
     "Save but not change anything on input 'sv'" in {
       val old = controller.gameToString

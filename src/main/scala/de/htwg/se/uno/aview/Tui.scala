@@ -20,12 +20,9 @@ class Tui(controller: ControllerInterface) extends Reactor {
           controller.createGame(wf(1).toInt)
           Success("Valid Command: " + input)
         } else {
-          controller.createGame()
+          controller.createGame(2)
           Success("Valid Command: " + input)
         }
-      case "t" =>
-        controller.createTestGame()
-        Success("Valid Command: " + input)
       case "s" =>
         if (input.length() > 5) {
           if(input.substring(6).equals("blue")) {
@@ -38,7 +35,7 @@ class Tui(controller: ControllerInterface) extends Reactor {
             controller.set(input.substring(2, 5), 4)
           }
         } else {
-          controller.set(input.substring(2))
+          controller.set(input.substring(2), 0)
         }
         Success("Valid command: " + input)
       case "g" =>
@@ -67,7 +64,6 @@ class Tui(controller: ControllerInterface) extends Reactor {
       case _ =>
         controller.controllerEvent("unknownCommand")
         Success("Unknown Command: " + input)
-        //Failure(new IllegalArgumentException("Wrong input: " + input))
     }
   }
 
