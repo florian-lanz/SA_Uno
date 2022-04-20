@@ -12,6 +12,22 @@ lazy val commonDependencies = Seq(
     dependencies.typesafeplay
 )
 
+lazy val commonSettings = Seq(
+  scalaVersion := scala3Version,
+  organization := "de.htwg.se",
+)
+
+lazy val root = project
+  .in(file("."))
+  .aggregate(persistence)
+  .dependsOn(tools, model, persistence)
+  .settings(
+    name := "Uno",
+    version := projectVersion,
+    commonSettings,
+    libraryDependencies ++= commonDependencies,
+  )
+
 lazy val persistence = (project in file("Persistence"))
   .dependsOn(model)
   .settings(
@@ -36,19 +52,3 @@ lazy val model = (project in file("Model"))
     commonSettings,
     libraryDependencies ++= commonDependencies,
   )
-
-lazy val root = project
-  .in(file("."))
-  .aggregate(persistence)
-  .dependsOn(tools, model, persistence)
-  .settings(
-    name := "Uno",
-    version := projectVersion,
-    commonSettings,
-    libraryDependencies ++= commonDependencies,
-  )
-
-lazy val commonSettings = Seq(
-  scalaVersion := scala3Version,
-  organization := "de.htwg.se",
-)
