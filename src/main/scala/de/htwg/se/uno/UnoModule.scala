@@ -3,10 +3,9 @@ package de.htwg.se.uno
 import com.google.inject.AbstractModule
 import com.google.inject.name.Names
 import de.htwg.se.uno.controller.controllerComponent._
-import de.htwg.se.uno.model.fileIoComponent.FileIOInterface
-import de.htwg.se.uno.model.fileIoComponent._
-import de.htwg.se.uno.model.gameComponent.gameBaseImpl.Game
-import de.htwg.se.uno.model.gameComponent.GameInterface
+import fileIoComponent._
+import model.gameComponent.gameBaseImpl.Game
+import model.gameComponent.GameInterface
 
 class UnoModule extends AbstractModule:
   val defaultPlayers: Int = 2

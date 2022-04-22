@@ -1,7 +1,7 @@
 package de.htwg.se.uno.controller
 
 import de.htwg.se.uno.controller.controllerComponent.controllerBaseImpl.{Controller, EnemyCommand, PullCommand}
-import de.htwg.se.uno.model.gameComponent.gameBaseImpl.{Card, Color, Enemy, Game, Player, Value}
+import model.gameComponent.gameBaseImpl.{Card, Color, Enemy, Game, Player, Value}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
