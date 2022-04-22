@@ -1,19 +1,54 @@
-ThisBuild / version := "0.1.0-SNAPSHOT"
+import sbt.Keys.libraryDependencies
 
-ThisBuild / scalaVersion := "3.1.1"
+val projectVersion = "0.1.0-SNAPSHOT"
+val scala3Version = "3.1.1"
 
-libraryDependencies += "org.scalactic" %% "scalactic" % "3.2.11"
-libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.11" % "test"
+lazy val commonDependencies = Seq(
+    dependencies.scalactic,
+    dependencies.scalatest,
+    dependencies.googleinject,
+    dependencies.scalalangmodulesXml,
+    dependencies.scalalangmodulesSwing,
+    dependencies.typesafeplay
+)
 
-libraryDependencies += "org.scala-lang.modules" % "scala-swing_2.13" % "3.0.0"
+lazy val commonSettings = Seq(
+  scalaVersion := scala3Version,
+  organization := "de.htwg.se",
+)
 
-libraryDependencies += "com.google.inject" % "guice" % "5.1.0"
-
-libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "2.0.1"
-
-libraryDependencies += "com.typesafe.play" %% "play-json" % "2.10.0-RC5"
-
-lazy val root = (project in file("."))
+lazy val root = project
+  .in(file("."))
+  .aggregate(persistence)
+  .dependsOn(tools, model, persistence)
   .settings(
-    name := "Se_Uno"
+    name := "Uno",
+    version := projectVersion,
+    commonSettings,
+    libraryDependencies ++= commonDependencies,
+  )
+
+lazy val persistence = (project in file("Persistence"))
+  .dependsOn(model)
+  .settings(
+    name := "Uno-Persistence",
+    version := projectVersion,
+    commonSettings,
+    libraryDependencies ++= commonDependencies,
+  )
+
+lazy val tools = (project in file("Tools"))
+  .settings(
+    name := "Uno-Tools",
+    version := projectVersion,
+    commonSettings,
+    libraryDependencies ++= commonDependencies,
+  )
+
+lazy val model = (project in file("Model"))
+  .settings(
+    name := "Uno-Model",
+    version := projectVersion,
+    commonSettings,
+    libraryDependencies ++= commonDependencies,
   )
