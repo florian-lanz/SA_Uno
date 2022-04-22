@@ -32,7 +32,7 @@ class FileIO extends FileIOInterface:
     val direction = (json \ "game" \ "direction").get.toString.toBoolean
     val alreadyPulled = (json \ "game" \ "anotherPull").get.toString.toBoolean
     val revealedCardEffect = (json \ "game" \ "specialCard").get.toString.toInt
-    val cards = CardStack().createCoveredCardStack(1, 1).cardStack
+    val cards = CardStack().createCoveredCardStack(1, 1).addColoredSpecialCards().cardStack
     
     def createCardList(listName: String): List[Card] =
       (json \ "game" \ listName).as[List[String]].flatMap(cardString => cards.filter(card => card.toString.equals(cardString)))

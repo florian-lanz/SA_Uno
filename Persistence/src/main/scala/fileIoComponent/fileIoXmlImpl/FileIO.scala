@@ -31,7 +31,7 @@ class FileIO extends FileIOInterface :
     val direction = (file \\ "game" \ "@direction").text.toBoolean
     val alreadyPulled = (file \\ "game" \ "@anotherPull").text.toBoolean
     val revealedCardEffect = (file \\ "game" \ "@specialTop").text.toInt
-    val cards = CardStack().createCoveredCardStack(1, 1).cardStack
+    val cards = CardStack().createCoveredCardStack(1, 1).addColoredSpecialCards().cardStack
 
     def createCardList(listName: String): List[Card] =
       (file \\ listName \ "card").toList.flatMap(cardString => cards.filter(card => card.toString.equals((cardString \ "@card").text)))

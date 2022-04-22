@@ -11,3 +11,6 @@ case class CardStack(cardStack: List[Card] = List()):
     copy(zeroCards ::: numberCards ::: specialCards)
 
   def shuffle(): CardStack = copy(Random.shuffle(cardStack))
+  
+  def addColoredSpecialCards(): CardStack =
+    copy(cardStack ::: (13 to 14).map(value => (0 to 3).map(color => List(Card(Color.fromOrdinal(color), Value.fromOrdinal(value)))).toList.flatten).toList.flatten)
