@@ -4,11 +4,13 @@ import com.fasterxml.jackson.annotation.JsonValue
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import model.gameComponent.GameInterface
+import play.api.libs.json.{JsValue, Json, JsNumber, JsBoolean, JsArray, JsString}
+
 import scala.util.Random
 import scala.annotation.tailrec
 
-case class Game @Inject() (
-    @Named("DefaultPlayers") override val numOfPlayers: 2 | 3 | 4,
+case class Game (
+    override val numOfPlayers: 2 | 3 | 4 = 2,
     override val coveredCards: List[Card] = List(),
     override val revealedCards: List[Card] = List(),
     override val player: Player = Player(List()),
@@ -18,13 +20,8 @@ case class Game @Inject() (
     override val direction: Boolean = true,
     override val alreadyPulled: Boolean = false
 ) extends GameInterface(numOfPlayers, coveredCards, revealedCards, player, enemies, revealedCardEffect, activePlayer, direction, alreadyPulled):
-  
-  def copyGame(numOfPlayers: 2 | 3 | 4 = numOfPlayers, coveredCards: List[Card] = coveredCards, revealedCards: List[Card] = revealedCards,
-               player: Player = player, enemies: List[Enemy] = enemies, revealedCardEffect: Int = revealedCardEffect,
-               activePlayer: Int = activePlayer, direction: Boolean = direction, alreadyPulled: Boolean = alreadyPulled): Game =
-    copy(numOfPlayers, coveredCards, revealedCards, player, enemies, revealedCardEffect, activePlayer, direction, alreadyPulled)
 
-  def createGame(): Game =
+  def createGame(gameSize: 2 | 3 | 4): Game =
     val cards = CardStack().createCoveredCardStack().shuffle().cardStack
     val revealedCardsNew = List(cards.head)
     @tailrec
@@ -33,7 +30,7 @@ case class Game @Inject() (
     val playerNew = Player(initializePlayer(0, List[Card]()))
     @tailrec
     def initializeEnemies(enemyCounter: Int, i: Int, enemiesTemp: List[Card]): List[Card] =
-      if enemyCounter < numOfPlayers - 1 then
+      if enemyCounter < gameSize - 1 then
         if i < 7 then
           initializeEnemies(enemyCounter, i + 1, cards((enemyCounter + 1) * 7 + 1 + i) :: enemiesTemp)
         else
@@ -41,20 +38,20 @@ case class Game @Inject() (
       else enemiesTemp
     val enemiesCards = initializeEnemies(0, 0, List[Card]())
     val enemyOne = enemiesCards.take(7)
-    val enemyTwo = if numOfPlayers < 3 then List()
-      else if numOfPlayers == 3 then enemiesCards.drop(7)
+    val enemyTwo = if gameSize < 3 then List()
+      else if gameSize == 3 then enemiesCards.drop(7)
       else enemiesCards.slice(7, 14)
-    val enemyThree = if numOfPlayers < 4 then List() else enemiesCards.drop(14)
+    val enemyThree = if gameSize < 4 then List() else enemiesCards.drop(14)
     val enemiesNew = List(Enemy(enemyOne), Enemy(enemyTwo), Enemy(enemyThree))
-    val coveredCardsNew = cards.drop(numOfPlayers * 7 + 1)
+    val coveredCardsNew = cards.drop(gameSize * 7 + 1)
     copy(
-      numOfPlayers,
+      numOfPlayers = gameSize,
       coveredCardsNew,
       revealedCardsNew,
       playerNew,
       enemiesNew,
       revealedCardEffect = 0,
-      activePlayer = numOfPlayers - 1,
+      activePlayer = gameSize - 1,
       direction = true,
       alreadyPulled = false
     )
@@ -305,3 +302,54 @@ case class Game @Inject() (
       playerCards(2) + "\t\t\t\t\t" + enemy3Cards(2) + "\n" +
       playerCards(1) + "\t\t\t\t\t" + enemy3Cards(1) + "\n" +
       playerCards(3) + "\t\t\t\t\t" + enemy3Cards(3)
+
+  def gameToJson(): String =
+    Json.obj(
+      "game" -> Json.obj(
+        "numOfPlayers" -> JsNumber(numOfPlayers),
+        "activePlayer" -> JsNumber(activePlayer),
+        "direction" -> JsBoolean(direction),
+        "anotherPull" -> JsBoolean(alreadyPulled),
+        "specialCard" -> JsNumber(revealedCardEffect),
+        "enemy1Cards" -> JsArray(for cardNumber <- enemies.head.enemyCards.indices yield JsString(enemies.head.enemyCards(cardNumber).toString)),
+        "enemy2Cards" -> JsArray(for cardNumber <- enemies(1).enemyCards.indices yield JsString(enemies(1).enemyCards(cardNumber).toString)),
+        "enemy3Cards" -> JsArray(for cardNumber <- enemies(2).enemyCards.indices yield JsString(enemies(2).enemyCards(cardNumber).toString)),
+        "openCardStack" -> JsArray(for cardNumber <- revealedCards.indices yield JsString(revealedCards(cardNumber).toString)),
+        "playerCards" -> JsArray(for cardNumber <- player.handCards.indices yield JsString(player.handCards(cardNumber).toString)),
+        "coveredCardStack" -> JsArray(for cardNumber <- coveredCards.indices yield JsString(coveredCards(cardNumber).toString))
+      )
+    ).toString()
+
+  def gameFromJson(input: String): Game =
+    val json: JsValue = Json.parse(input)
+    
+    val numOfPlayersNew: 2 | 3 | 4 =
+      (json \ "game" \ "numOfPlayers").get.toString.toInt match
+        case 2 => 2
+        case 3 => 3
+        case 4 => 4
+        case _ => 2
+    val activePlayerNew = (json \ "game" \ "activePlayer").get.toString.toInt
+    val directionNew = (json \ "game" \ "direction").get.toString.toBoolean
+    val alreadyPulledNew = (json \ "game" \ "anotherPull").get.toString.toBoolean
+    val revealedCardEffectNew = (json \ "game" \ "specialCard").get.toString.toInt
+    val cards = CardStack().createCoveredCardStack(1, 1).addColoredSpecialCards().cardStack
+
+    def createCardList(listName: String): List[Card] =
+      (json \ "game" \ listName).as[List[String]].flatMap(cardString => cards.filter(card => card.toString.equals(cardString)))
+
+    copy(
+      numOfPlayers = numOfPlayersNew,
+      activePlayer = activePlayerNew,
+      direction = directionNew,
+      alreadyPulled = alreadyPulledNew,
+      revealedCardEffect = revealedCardEffectNew,
+      enemies = List(
+        Enemy(createCardList("enemy1Cards")),
+        Enemy(createCardList("enemy2Cards")),
+        Enemy(createCardList("enemy3Cards")),
+      ),
+      player = Player(createCardList("playerCards")),
+      coveredCards = createCardList("coveredCardStack"),
+      revealedCards = createCardList("openCardStack")
+    )

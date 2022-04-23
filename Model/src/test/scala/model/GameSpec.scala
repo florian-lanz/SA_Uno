@@ -12,23 +12,20 @@ class GameSpec extends AnyWordSpec {
       val yellowPlusFour = Card(Color.Yellow, Value.PlusFour)
       val redZero = Card(Color.Red, Value.Zero)
       val game = Game(2)
-      "Should be able to be copied" in {
-        game.copyGame() should be (Game(2))
-      }
       "Should be able to create a new game" in {
-        game.createGame().numOfPlayers should be (2)
-        game.createGame().coveredCards.length should be (93)
-        game.createGame().revealedCards.length should be (1)
-        game.createGame().player.handCards.length should be (7)
-        game.createGame().enemies.head.enemyCards.length should be (7)
-        game.createGame().enemies(1).enemyCards.length should be (0)
-        game.createGame().enemies(2).enemyCards.length should be (0)
-        game.createGame().revealedCardEffect should be (0)
-        game.createGame().activePlayer should be (1)
-        game.createGame().direction should be (true)
-        game.createGame().alreadyPulled should be (false)
+        game.createGame(2).numOfPlayers should be (2)
+        game.createGame(2).coveredCards.length should be (93)
+        game.createGame(2).revealedCards.length should be (1)
+        game.createGame(2).player.handCards.length should be (7)
+        game.createGame(2).enemies.head.enemyCards.length should be (7)
+        game.createGame(2).enemies(1).enemyCards.length should be (0)
+        game.createGame(2).enemies(2).enemyCards.length should be (0)
+        game.createGame(2).revealedCardEffect should be (0)
+        game.createGame(2).activePlayer should be (1)
+        game.createGame(2).direction should be (true)
+        game.createGame(2).alreadyPulled should be (false)
       }
-      "Should be able to push a player card" in {
+//      "Should be able to push a player card" in {
 //        val oldGameTwoPlayers = Game(
 //          numOfPlayers = 2,
 //          coveredCards = List(redZero, blueOne),
@@ -39,10 +36,8 @@ class GameSpec extends AnyWordSpec {
 //          direction = false,
 //          alreadyPulled = true
 //        )
-        game.copyGame() should be (Game(2))
-      }
-
-
+//        game.copyGame() should be (Game(2))
+//      }
       "Should be able to return the revealed effect of a card" in {
         game.discoverRevealedCardEffect(greenSuspend) should be (-1)
         game.discoverRevealedCardEffect(bluePlusTwo) should be (2)
@@ -72,7 +67,7 @@ class GameSpec extends AnyWordSpec {
         shuffledGame.revealedCards should be (List(redZero))
       }
       "Should be able to have a string representation of the game" in {
-        val newGame = Game(4).createGame()
+        val newGame = Game(4).createGame(2)
         newGame.toString should not be ""
       }
     }

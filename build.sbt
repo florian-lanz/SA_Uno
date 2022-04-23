@@ -9,7 +9,12 @@ lazy val commonDependencies = Seq(
     dependencies.googleinject,
     dependencies.scalalangmodulesXml,
     dependencies.scalalangmodulesSwing,
-    dependencies.typesafeplay
+    dependencies.typesafeplay,
+    dependencies.akkaActorTyped,
+    dependencies.akkaStream,
+    dependencies.akkaActor,
+    dependencies.akkaHttp,
+    dependencies.slf4jNop
 )
 
 lazy val commonSettings = Seq(
@@ -20,7 +25,7 @@ lazy val commonSettings = Seq(
 lazy val root = project
   .in(file("."))
   .aggregate(persistence)
-  .dependsOn(tools, model, persistence)
+  .dependsOn(model, persistence)
   .settings(
     name := "Uno",
     version := projectVersion,
@@ -32,14 +37,6 @@ lazy val persistence = (project in file("Persistence"))
   .dependsOn(model)
   .settings(
     name := "Uno-Persistence",
-    version := projectVersion,
-    commonSettings,
-    libraryDependencies ++= commonDependencies,
-  )
-
-lazy val tools = (project in file("Tools"))
-  .settings(
-    name := "Uno-Tools",
     version := projectVersion,
     commonSettings,
     libraryDependencies ++= commonDependencies,
