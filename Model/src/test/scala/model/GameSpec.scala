@@ -11,7 +11,7 @@ class GameSpec extends AnyWordSpec {
       val bluePlusTwo = Card(Color.Blue, Value.PlusTwo)
       val yellowPlusFour = Card(Color.Yellow, Value.PlusFour)
       val redZero = Card(Color.Red, Value.Zero)
-      val game = Game(2)
+      val game = Game()
       "Should be able to create a new game" in {
         game.createGame(2).numOfPlayers should be (2)
         game.createGame(2).coveredCards.length should be (93)

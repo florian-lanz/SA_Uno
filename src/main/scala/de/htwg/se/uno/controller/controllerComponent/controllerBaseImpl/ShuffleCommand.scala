@@ -7,15 +7,14 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpMethods, HttpRequest}
 import akka.http.scaladsl.unmarshalling.Unmarshaller
 import play.api.libs.json.Json
-
 import scala.concurrent.ExecutionContextExecutor
 import scala.util.{Failure, Success}
 
 class ShuffleCommand(controller: Controller, afterShuffleCommand: () => Unit) extends Command(controller):
   implicit val system: ActorSystem[Nothing] = ActorSystem(Behaviors.empty, "my-system")
   implicit val executionContext: ExecutionContextExecutor = system.executionContext
-  
-  override def doStep(): Unit = 
+
+  override def doStep(): Unit =
     Http().singleRequest(
       HttpRequest(
         method = HttpMethods.POST,
@@ -25,10 +24,10 @@ class ShuffleCommand(controller: Controller, afterShuffleCommand: () => Unit) ex
     ).onComplete {
       case Success(value) =>
         Unmarshaller.stringUnmarshaller(value.entity).onComplete {
-          case Success(value) => 
+          case Success(value) =>
             controller.gameJson = Json.parse(value)
             afterShuffleCommand()
-          case Failure(_) =>
+          case Failure(_) => controller.controllerEvent("modelRequestError")
         }
-      case Failure(_) =>
+      case Failure(_) => controller.controllerEvent("modelRequestError")
     }

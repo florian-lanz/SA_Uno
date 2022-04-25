@@ -27,7 +27,7 @@ case class RestService(controller: ControllerInterface):
         get {
           path("") {
             val apiInfo =
-              """Available API Routes:
+              """Available API Routes - Uno:
                 |
                 |GET    /new-game/<numOfPlayers>
                 |GET    /set-card/<card>

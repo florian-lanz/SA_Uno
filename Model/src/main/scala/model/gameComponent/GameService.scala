@@ -24,6 +24,24 @@ case object GameService:
 
     val route =
       concat (
+        get {
+          path("") {
+            val apiInfo =
+              """Available API Routes - Model:
+                |
+                |POST    /to-string                 -> required arguments: gameJson
+                |POST    /enemy                     -> required arguments: enemyIndex, gameJson
+                |POST    /pull-move                 -> required arguments: gameJson
+                |POST    /push-move                 -> required arguments: cardString, cardColor, gameJson
+                |POST    /create-game               -> required arguments: gameSize, gameJson
+                |POST    /next-turn                 -> required arguments: gameJson
+                |POST    /next-enemy                -> required arguments: gameJson
+                |POST    /change-active-player      -> required arguments: gameJson
+                |POST    /shuffle                   -> required arguments: gameJson
+                |""".stripMargin
+            complete(HttpEntity(ContentTypes.`application/json`, apiInfo))
+          }
+        },
         post {
           path("to-string") {
             entity(as[String]) { request =>

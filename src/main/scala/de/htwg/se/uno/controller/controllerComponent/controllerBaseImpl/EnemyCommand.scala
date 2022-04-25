@@ -7,7 +7,6 @@ import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpMethods, HttpRequ
 import akka.http.scaladsl.unmarshalling.Unmarshaller
 import de.htwg.se.uno.util.Command
 import play.api.libs.json.Json
-
 import scala.concurrent.ExecutionContextExecutor
 import scala.util.{Failure, Success}
 
@@ -33,7 +32,7 @@ class EnemyCommand(controller: Controller, enemyIndex: Int, afterEnemyCommand: (
           case Success(value) => 
             controller.gameJson = Json.parse(value)
             afterEnemyCommand()
-          case Failure(_) =>
+          case Failure(_) => controller.controllerEvent("modelRequestError")
         }
-      case Failure(_) =>
+      case Failure(_) => controller.controllerEvent("modelRequestError")
     }
