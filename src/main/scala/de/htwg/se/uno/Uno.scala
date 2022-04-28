@@ -12,16 +12,10 @@ import scala.io.StdIn.readLine
   val controller: ControllerInterface = Controller()
   controller.createGame(2)
 
-  Thread.sleep(3000)
-
-  val tui = new Tui(controller)
-  val gui = new SwingGui(controller)
   val restService = RestService(controller)
   val server = restService.start()
-  controller.publish(new GameSizeChanged())
-
-  println(controller.controllerEvent("idle"))
-
+  val tui = new Tui(controller)
+  val gui = new SwingGui(controller)
   gui.open()
 
   var input: String = ""

@@ -43,9 +43,9 @@ class Controller(var gameJson: JsValue = Json.obj()) extends ControllerInterface
           case Success(value) =>
             gameJson = Json.parse(value)
             initialize()
-          case Failure(_) =>
+          case Failure(_) => controllerEvent("modelRequestError")
         }
-      case Failure(_) =>
+      case Failure(_) => controllerEvent("modelRequestError")
     }
 
   def initialize(): Unit =
@@ -138,19 +138,17 @@ class Controller(var gameJson: JsValue = Json.obj()) extends ControllerInterface
         while !nextTurn() do
           result = undoManager.undoStep()
           result match
-            case Success(value) => controllerEvent("undo")
-            case Failure(e) =>
-              controllerEvent("couldNotUndo")
-      case Failure(e) =>
-        controllerEvent("couldNotUndo")
+            case Success(_) => controllerEvent("undo")
+            case Failure(_) => controllerEvent("couldNotUndo")
+      case Failure(_) => controllerEvent("couldNotUndo")
     publish(new GameChanged)
     won()
 
   def redo(): Unit =
     val result = undoManager.redoStep()
     result match
-      case Success(value) => controllerEvent("redo")
-      case Failure(e) => controllerEvent("couldNotRedo")
+      case Success(_) => controllerEvent("redo")
+      case Failure(_) => controllerEvent("couldNotRedo")
     publish(new GameChanged)
     shuffle()
     won()
@@ -319,6 +317,7 @@ class Controller(var gameJson: JsValue = Json.obj()) extends ControllerInterface
       case "couldNotSave" => "Spielstand konnte nicht gespeichert werden"
       case "couldNotUndo" => "Es konnte Kein Spielzug rückgängig gemacht werden"
       case "couldNotRedo" => "Es konnte kein Spielzug wiederhergestellt werden"
+      case "modelRequestError" => "Fehler bei der Kommunikation mit dem Model"
       case "chooseColor" => "Wähle eine Farbe"
       case "shuffled" => "Verdeckter Kartenstapel wurde neu gemischt"
       case "idle" => controllerEventString

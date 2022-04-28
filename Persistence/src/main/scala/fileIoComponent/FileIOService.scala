@@ -24,6 +24,17 @@ case object FileIOService:
     val route =
       concat (
         get {
+          path("") {
+            val apiInfo =
+              """Available API Routes - Persistence:
+                |
+                |GET     /load
+                |POST    /save    -> required arguments: gameJson
+                |""".stripMargin
+            complete(HttpEntity(ContentTypes.`application/json`, apiInfo))
+          }
+        },
+        get {
           path("load") {
             fileIO.load() match
               case Success(game) => complete(HttpEntity(ContentTypes.`application/json`, game))

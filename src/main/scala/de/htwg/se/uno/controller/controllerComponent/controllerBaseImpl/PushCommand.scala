@@ -7,7 +7,6 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpMethods, HttpRequest}
 import akka.http.scaladsl.unmarshalling.Unmarshaller
 import play.api.libs.json.Json
-
 import scala.concurrent.ExecutionContextExecutor
 import scala.util.{Failure, Success}
 
@@ -34,7 +33,7 @@ class PushCommand(string: String, color: Int, controller: Controller, afterPushC
           case Success(value) =>
             controller.gameJson = Json.parse(value)
             afterPushCommand()
-          case Failure(_) =>
+          case Failure(_) => controller.controllerEvent("modelRequestError")
         }
-      case Failure(_) =>
+      case Failure(_) => controller.controllerEvent("modelRequestError")
     }
