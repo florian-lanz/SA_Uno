@@ -4,7 +4,6 @@ import scala.swing.{Color, Publisher}
 
 trait ControllerInterface extends Publisher:
   def createGame(size: Int):Unit
-  def gameToString: String
   def set(string: String, color: Int): Unit
   def get(): Unit
   def enemy(): Unit
@@ -17,10 +16,11 @@ trait ControllerInterface extends Publisher:
   def getGuiCardText(list : Int, index : Int) : String
   def getLength(list : Int) : Int
   def controllerEvent(string : String) : String
-  def getNumOfPlayers: 2 | 3 | 4
-  def nextTurn() : Boolean
+  def getNumOfPlayers: Int
+  def nextTurn(): Boolean
   def getHs2: String
-  def nextEnemy() : Int
+  def nextEnemy(): Int
+  def gameToJson(): String
 
 import scala.swing.event.Event
 

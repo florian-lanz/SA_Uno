@@ -1,7 +1,13 @@
 package de.htwg.se.uno.aview
 
+import akka.actor.typed.ActorSystem
+import akka.actor.typed.scaladsl.Behaviors
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpMethods, HttpRequest}
+import akka.http.scaladsl.unmarshalling.Unmarshaller
 import de.htwg.se.uno.controller.controllerComponent.{ChooseColor, ControllerInterface, GameChanged, GameEnded, GameNotChanged, GameSizeChanged}
 
+import scala.concurrent.ExecutionContextExecutor
 import scala.swing.Reactor
 import scala.util.{Failure, Success, Try}
 
@@ -13,7 +19,6 @@ class Tui(controller: ControllerInterface) extends Reactor {
     val wf:Array[String] = input.split("[^a-z^A-Z^ß^ä^ö^ü^Ä^Ö^Ü^0-9/+]+")
     wf(0) match {
       case "q" =>
-        System.exit(0)
         Success("Valid Command: " + input)
       case "n" =>
         if (wf.length == 2) {
@@ -78,7 +83,24 @@ class Tui(controller: ControllerInterface) extends Reactor {
   }
 
   def printTui(): Unit = {
-    println(controller.gameToString)
-    println(controller.controllerEvent("idle"))
+    implicit val system: ActorSystem[Nothing] = ActorSystem(Behaviors.empty, "my-system")
+    implicit val executionContext: ExecutionContextExecutor = system.executionContext
+
+    Http().singleRequest(
+      HttpRequest(
+        method = HttpMethods.POST,
+        uri = "http://localhost:8082/to-string",
+        entity = HttpEntity(ContentTypes.`application/json`, controller.gameToJson())
+      )
+    ).onComplete {
+      case Success(value) =>
+        Unmarshaller.stringUnmarshaller(value.entity).onComplete {
+          case Success(value) =>
+            println(value)
+            println(controller.controllerEvent("idle"))
+          case Failure(_) =>
+        }
+      case Failure(_) =>
+    }
   }
 }

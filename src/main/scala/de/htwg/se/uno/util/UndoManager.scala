@@ -1,4 +1,4 @@
-package tools.util
+package de.htwg.se.uno.util
 
 import scala.util.Try
 

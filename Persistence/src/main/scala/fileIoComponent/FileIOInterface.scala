@@ -5,6 +5,5 @@ import play.api.libs.json.JsValue
 import scala.util.Try
 
 trait FileIOInterface:
-  def load(source: String = ""): Try[GameInterface]
-  def save(game: GameInterface): Try[Unit]
-  def gameToString(game: GameInterface): String
+  def load(): Try[String]
+  def save(game: String): Try[Unit]

@@ -1,22 +1,21 @@
 package de.htwg.se.uno
 
 import com.google.inject.{Guice, Injector}
-import de.htwg.se.uno.aview.Tui
+import de.htwg.se.uno.aview.{RestService, Tui}
 import de.htwg.se.uno.aview.gui.SwingGui
 import de.htwg.se.uno.controller.controllerComponent.{ControllerInterface, GameSizeChanged}
-
+import de.htwg.se.uno.controller.controllerComponent.controllerBaseImpl._
 import scala.io.StdIn.readLine
 
 @main def main(): Unit =
   val injector: Injector = Guice.createInjector(new UnoModule)
-  val controller: ControllerInterface = injector.getInstance(classOf[ControllerInterface])
+  val controller: ControllerInterface = Controller()
+  controller.createGame(2)
+
+  val restService = RestService(controller)
+  val server = restService.start()
   val tui = new Tui(controller)
   val gui = new SwingGui(controller)
-  controller.publish(new GameSizeChanged())
-
-  println(controller.gameToString)
-  println(controller.controllerEvent("idle"))
-
   gui.open()
 
   var input: String = ""
@@ -25,3 +24,5 @@ import scala.io.StdIn.readLine
   while input != "q" do
     input = readLine()
     tui.processInputLine(input)
+
+  restService.stop(server)
