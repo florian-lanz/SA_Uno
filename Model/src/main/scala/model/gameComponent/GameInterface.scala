@@ -1,6 +1,6 @@
 package model.gameComponent
 
-import model.gameComponent.gameBaseImpl._
+import model.gameComponent.gameBaseImpl.*
 
 trait GameInterface( val numOfPlayers: 2 | 3 | 4,
                      val coveredCards: List[Card],
@@ -15,11 +15,8 @@ trait GameInterface( val numOfPlayers: 2 | 3 | 4,
   def enemy(enemyIndex: Int, kiNeeded: Boolean = true): Game
   def pullMove(): Game
   def pushMove(string: String, color: Int): Game
-  def createGame(): Game
+  def createGame(gameSize: 2 | 3 | 4): Game
   def nextTurn(): Boolean
   def nextEnemy(): Int
   def changeActivePlayer(): Game
   def shuffle(): Game
-  def copyGame(numOfPlayers: 2 | 3 | 4 = numOfPlayers, coveredCards: List[Card] = coveredCards, revealedCards: List[Card] = revealedCards,
-               player: Player = player, enemies: List[Enemy] = enemies, revealedCardEffect: Int = revealedCardEffect,
-               activePlayer: Int = activePlayer, direction: Boolean = direction, alreadyPulled: Boolean = alreadyPulled): Game

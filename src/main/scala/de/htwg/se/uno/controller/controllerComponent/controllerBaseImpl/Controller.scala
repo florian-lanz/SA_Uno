@@ -4,26 +4,49 @@ import com.google.inject.{Guice, Inject, Injector, Key}
 import com.google.inject.name.Names
 import de.htwg.se.uno.UnoModule
 import de.htwg.se.uno.controller.controllerComponent.*
-import fileIoComponent.FileIOInterface
-import model.gameComponent.GameInterface
-import tools.util.UndoManager
+import de.htwg.se.uno.util.UndoManager
+import play.api.libs.json.{JsValue, Json}
+import akka.actor.typed.ActorSystem
+import akka.actor.typed.scaladsl.Behaviors
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpMethods, HttpRequest}
+import akka.http.scaladsl.unmarshalling.Unmarshaller
 
+import scala.concurrent.ExecutionContextExecutor
 import scala.swing.{Color, Publisher}
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
-class Controller @Inject() (var game: GameInterface) extends ControllerInterface with Publisher:
+class Controller(var gameJson: JsValue = Json.obj()) extends ControllerInterface with Publisher:
   private var undoManager = new UndoManager
   val injector: Injector = Guice.createInjector(new UnoModule)
-  val fileIo: FileIOInterface = injector.getInstance(classOf[FileIOInterface])
   private var controllerEventString = "Du bist dran. Mögliche Befehle: q, n, t, s [Karte], g, u, r"
   private var savedSpecialCard = ""
   var undoList: List[String] = List()
   var redoList: List[String] = List()
+  implicit val system: ActorSystem[Nothing] = ActorSystem(Behaviors.empty, "my-system")
+  implicit val executionContext: ExecutionContextExecutor = system.executionContext
 
   def createGame(size: Int): Unit =
-    game = injector.getInstance(Key.get(classOf[GameInterface], Names.named(size + " Players")))
-    game = game.createGame()
-    initialize()
+    Http().singleRequest(
+      HttpRequest(
+        method = HttpMethods.POST,
+        uri = "http://localhost:8082/create-game",
+        entity = HttpEntity(ContentTypes.`application/json`,
+          Json.obj(
+            "gameSize" -> size
+          ).toString
+        )
+      )
+    ).onComplete {
+      case Success(value) =>
+        Unmarshaller.stringUnmarshaller(value.entity).onComplete {
+          case Success(value) =>
+            gameJson = Json.parse(value)
+            initialize()
+          case Failure(_) => controllerEvent("modelRequestError")
+        }
+      case Failure(_) => controllerEvent("modelRequestError")
+    }
 
   def initialize(): Unit =
     savedSpecialCard = ""
@@ -35,20 +58,23 @@ class Controller @Inject() (var game: GameInterface) extends ControllerInterface
 
   def set(string: String, color: Int = 0): Unit =
     if string.charAt(0) != 'S' || color != 0 then
-      if game.nextTurn() then
-        val s = gameToString
-        undoList = fileIo.gameToString(game).toString :: undoList
-        game = game.changeActivePlayer()
-        undoManager.doStep(new PushCommand(string, color, this))
-        if !s.equals(gameToString) then
-          controllerEvent("enemyTurn")
-          game = game.copyGame(alreadyPulled = false)
-          publish(new GameChanged)
-          won()
-        else
-          resetActivePlayer()
-          controllerEvent("pushCardNotAllowed")
-          publish(new GameNotChanged)
+      if nextTurn() then
+        val s = (gameJson \ "game" \ "playerCards").as[List[String]]
+        undoList = gameJson.toString :: undoList
+        changeActivePlayer()
+
+        def afterPushCommand(): Unit =
+          if !s.equals((gameJson \ "game" \ "playerCards").as[List[String]]) then
+            controllerEvent("enemyTurn")
+            changeGameJson(alreadyPulledNew = false)
+            publish(new GameChanged)
+            won()
+          else
+            resetActivePlayer()
+            controllerEvent("pushCardNotAllowed")
+            publish(new GameNotChanged)
+
+        undoManager.doStep(new PushCommand(string, color, this, afterPushCommand))
       else
         controllerEvent("enemyTurn")
         publish(new GameNotChanged)
@@ -58,140 +84,221 @@ class Controller @Inject() (var game: GameInterface) extends ControllerInterface
       publish(new ChooseColor)
 
   def get(): Unit =
-    if game.nextTurn() then
-      val b = game.alreadyPulled
-      undoList = fileIo.gameToString(game) :: undoList
-      game = game.changeActivePlayer()
-      val activePlayer = game.activePlayer
-      undoManager.doStep(new PullCommand(this))
-      val activePlayer2 = game.activePlayer
-      controllerEvent("enemyTurn")
-      if b then
-        game = game.copyGame(alreadyPulled = false)
-      if game.alreadyPulled then
-        resetActivePlayer()
-        controllerEvent("yourTurn")
-      if activePlayer != activePlayer2 then
-        resetActivePlayer()
-        controllerEvent("pullCardNotAllowed")
-      publish(new GameChanged)
-      shuffle()
+    if nextTurn() then
+      val b = (gameJson \ "game" \ "anotherPull").get.toString.toBoolean
+      undoList = gameJson.toString :: undoList
+      changeActivePlayer()
+      val activePlayer = (gameJson \ "game" \ "activePlayer").get.toString.toInt
+
+      def afterPullCommand(): Unit =
+        val activePlayer2 = (gameJson \ "game" \ "activePlayer").get.toString.toInt
+        controllerEvent("enemyTurn")
+        if b then
+          changeGameJson(alreadyPulledNew = false)
+        if (gameJson \ "game" \ "anotherPull").get.toString.toBoolean then
+          resetActivePlayer()
+          controllerEvent("yourTurn")
+        if activePlayer != activePlayer2 then
+          resetActivePlayer()
+          controllerEvent("pullCardNotAllowed")
+        publish(new GameChanged)
+        shuffle()
+
+      undoManager.doStep(new PullCommand(this, afterPullCommand))
+
     else
       controllerEvent("enemyTurn")
       publish(new GameNotChanged)
 
+
   def enemy(): Unit =
-    val enemyIndex = game.nextEnemy() - 1
-    undoList = fileIo.gameToString(game).toString :: undoList
-    game = game.changeActivePlayer()
-    undoManager.doStep(EnemyCommand(this, enemyIndex))
-    if game.nextTurn() then controllerEvent("yourTurn")
-    else controllerEvent("enemyTurn")
-    if game.alreadyPulled then
-      resetActivePlayer()
-      controllerEvent("enemyTurn")
-    publish(new GameChanged)
-    shuffle()
-    won()
+    val enemyIndex = nextEnemy() - 1
+    undoList = gameJson.toString :: undoList
+    changeActivePlayer()
+
+    def afterEnemyCommand(): Unit =
+      if nextTurn() then
+        controllerEvent("yourTurn")
+      else
+        controllerEvent("enemyTurn")
+      if (gameJson \ "game" \ "anotherPull").get.toString.toBoolean then
+        resetActivePlayer()
+        controllerEvent("enemyTurn")
+      publish(new GameChanged)
+      shuffle()
+      won()
+
+    undoManager.doStep(new EnemyCommand(this, enemyIndex, afterEnemyCommand))
 
   def undo(): Unit =
     var result = undoManager.undoStep()
     result match
       case Success(value) =>
         controllerEvent("undo")
-        while !game.nextTurn() do
+        while !nextTurn() do
           result = undoManager.undoStep()
           result match
-            case Success(value) => controllerEvent("undo")
-            case Failure(e) =>
-              controllerEvent("couldNotUndo")
-      case Failure(e) =>
-        controllerEvent("couldNotUndo")
+            case Success(_) => controllerEvent("undo")
+            case Failure(_) => controllerEvent("couldNotUndo")
+      case Failure(_) => controllerEvent("couldNotUndo")
     publish(new GameChanged)
     won()
 
   def redo(): Unit =
     val result = undoManager.redoStep()
     result match
-      case Success(value) => controllerEvent("redo")
-      case Failure(e) => controllerEvent("couldNotRedo")
+      case Success(_) => controllerEvent("redo")
+      case Failure(_) => controllerEvent("couldNotRedo")
     publish(new GameChanged)
     shuffle()
     won()
 
   def save(): Unit =
-    val result = fileIo.save(game)
-    result match
-      case Success(value) => controllerEvent("save")
-      case Failure(e) => controllerEvent("couldNotSave")
-    publish(new GameChanged)
+    Http().singleRequest(
+      HttpRequest(
+        method = HttpMethods.POST,
+        uri = "http://localhost:8081/save",
+        entity = HttpEntity(ContentTypes.`application/json`, gameJson.toString)
+      )
+    ).onComplete {
+      case Success(value) =>
+        Unmarshaller.stringUnmarshaller(value.entity).onComplete {
+          case Success(value) =>
+            if value.equals("Success") then
+              controllerEvent("save")
+              publish(new GameChanged)
+            else
+              controllerEvent("couldNotSave")
+              publish(new GameChanged)
+          case Failure(_) =>
+            controllerEvent("couldNotSave")
+            publish(new GameChanged)
+        }
+      case Failure(_) =>
+        controllerEvent("couldNotSave")
+        publish(new GameChanged)
+    }
 
   def load(): Unit =
-    val result = fileIo.load()
-    result match
+    Http().singleRequest(
+      HttpRequest(
+        method = HttpMethods.GET,
+        uri = "http://localhost:8081/load"
+      )
+    ).onComplete {
       case Success(value) =>
-        game = value
-        savedSpecialCard = ""
-        undoManager = new UndoManager
-        controllerEvent("load")
-      case _ =>
+        Unmarshaller.stringUnmarshaller(value.entity).onComplete {
+          case Success(value) =>
+            if value.equals("Failure") then
+              controllerEvent("couldNotLoad")
+              publish(new GameChanged)
+            else
+              gameJson = Json.parse(value)
+              savedSpecialCard = ""
+              undoManager = new UndoManager
+              controllerEvent("load")
+              publish(new GameChanged)
+          case Failure(_) =>
+            controllerEvent("couldNotLoad")
+            publish(new GameChanged)
+        }
+      case Failure(_) =>
         controllerEvent("couldNotLoad")
-    publish(new GameChanged)
+        publish(new GameChanged)
+    }
 
   def won(): Unit =
-    if game.player.handCards.isEmpty then
+    if (gameJson \ "game" \ "playerCards").as[List[String]].isEmpty then
       controllerEvent("won")
       publish(new GameEnded)
-    else if game.enemies.head.enemyCards.isEmpty then
+    else if (gameJson \ "game" \ "enemy1Cards").as[List[String]].isEmpty then
       controllerEvent("lost")
       publish(new GameEnded)
-    else if game.numOfPlayers >= 3 && game.enemies(1).enemyCards.isEmpty then
+    else if (gameJson \ "game" \ "numOfPlayers").get.toString.toInt >= 3 && (gameJson \ "game" \ "enemy2Cards").as[List[String]].isEmpty then
       controllerEvent("lost")
       publish(new GameEnded)
-    else if game.numOfPlayers >= 4 && game.enemies(2).enemyCards.isEmpty then
+    else if (gameJson \ "game" \ "numOfPlayers").get.toString.toInt >= 4 && (gameJson \ "game" \ "enemy3Cards").as[List[String]].isEmpty then
       controllerEvent("lost")
       publish(new GameEnded)
     else
       controllerEvent("idle")
 
   def shuffle(): Unit =
-    if game.coveredCards.length <= 16 then
-      undoList = fileIo.gameToString(game) :: undoList
-      undoManager.doStep(new ShuffleCommand(this))
-      controllerEvent("shuffled")
-      publish(new GameChanged)
+    if (gameJson \ "game" \ "coveredCardStack").as[List[String]].length <= 16 then
+      undoList = gameJson.toString :: undoList
+
+      def afterShuffleCommand(): Unit =
+        controllerEvent("shuffled")
+        publish(new GameChanged)
+
+      undoManager.doStep(new ShuffleCommand(this, afterShuffleCommand))
+
     else
       controllerEvent("idle")
 
   def getLength(list: Int): Int =
     list match
-      case 0 | 1 | 2 => game.enemies(list).enemyCards.length
-      case 3         => game.revealedCards.length
-      case 4         => game.player.handCards.length
-      case _         => game.coveredCards.length
+      case 0 => (gameJson \ "game" \ "enemy1Cards").as[List[String]].length
+      case 1 => (gameJson \ "game" \ "enemy2Cards").as[List[String]].length
+      case 2 => (gameJson \ "game" \ "enemy3Cards").as[List[String]].length
+      case 3 => (gameJson \ "game" \ "openCardStack").as[List[String]].length
+      case 4 => (gameJson \ "game" \ "playerCards").as[List[String]].length
+      case _ => (gameJson \ "game" \ "coveredCardStack").as[List[String]].length
 
   def getCardText(list: Int, index: Int): String =
-    if list == 3 && index == 1 then game.revealedCards.head.toString
+    if list == 3 && index == 1 then (gameJson \ "game" \ "openCardStack").as[List[String]].head
     else if list == 3 && index == 2 then "Do Step"
-    else if list == 4 then game.player.handCards(index).toString
+    else if list == 4 then
+      val playerCards: List[String] = (gameJson \ "game" \ "playerCards").as[List[String]]
+      playerCards(index)
     else "Uno"
 
   def getGuiCardText(list: Int, index: Int): String =
-    if list == 3 && index == 1 then game.revealedCards.head.toGuiString
+    if list == 3 && index == 1 then 
+      val firstChar = (gameJson \ "game" \ "openCardStack").as[List[String]].head(1).toString
+      val secondChar = if firstChar == " " then (gameJson \ "game" \ "openCardStack").as[List[String]].head(2).toString else " "
+      val thirdChar = if firstChar == " " then " " else (gameJson \ "game" \ "openCardStack").as[List[String]].head(2).toString
+      firstChar + secondChar + thirdChar 
     else if list == 3 && index == 2 then "Do Step"
-    else if list == 4 then game.player.handCards(index).toGuiString
+    else if list == 4 then 
+      val playerCards = (gameJson \ "game" \ "playerCards").as[List[String]]
+      val firstChar = playerCards(index)(1).toString
+      val secondChar = if firstChar == " " then playerCards(index)(2).toString else " "
+      val thirdChar = if firstChar == " " then " " else playerCards(index)(2).toString
+      firstChar + secondChar + thirdChar 
     else "Uno"
 
   def resetActivePlayer(): Unit =
-    game = game.copyGame(direction = !game.direction)
-    game = game.changeActivePlayer()
-    game = game.copyGame(direction = !game.direction)
+    changeGameJson(directionNew = !(gameJson \ "game" \ "direction").get.toString.toBoolean)
+    changeActivePlayer()
+    changeGameJson(directionNew = !(gameJson \ "game" \ "direction").get.toString.toBoolean)
 
-  def gameToString: String = game.toString
-  def getNumOfPlayers: 2 | 3 | 4 = game.numOfPlayers
-  def nextTurn(): Boolean = game.nextTurn()
+  def getNumOfPlayers: Int = (gameJson \ "game" \ "numOfPlayers").get.toString.toInt
+  
+  def nextTurn(): Boolean =
+    val activePlayer = (gameJson \ "game" \ "activePlayer").get.toString.toInt
+    val direction = (gameJson \ "game" \ "direction").get.toString.toBoolean
+    val numOfPlayers = (gameJson \ "game" \ "numOfPlayers").get.toString.toInt
+    (activePlayer == 1 && (!direction || numOfPlayers == 2)) ||
+      (activePlayer == 2 && direction && numOfPlayers == 3) ||
+      (activePlayer == 3 && direction && numOfPlayers == 4)
+
   def getHs2: String = savedSpecialCard
-  def nextEnemy(): Int = game.nextEnemy()
+
+  def nextEnemy(): Int =
+    val activePlayer = (gameJson \ "game" \ "activePlayer").get.toString.toInt
+    val direction = (gameJson \ "game" \ "direction").get.toString.toBoolean
+    val numOfPlayers = (gameJson \ "game" \ "numOfPlayers").get.toString.toInt
+    if numOfPlayers == 2 || (activePlayer == 0 && direction) || (activePlayer == 2 && !direction) then
+      1
+    else if (numOfPlayers >= 3 && activePlayer == 1 && direction) || (numOfPlayers == 3 && activePlayer == 0 && !direction) || (activePlayer == 3 && !direction) then
+      2
+    else
+      3
+
+  def changeActivePlayer(): Unit = if nextTurn() then changeGameJson(activePlayerNew = 0) else changeGameJson(activePlayerNew = nextEnemy())
+
+  def gameToJson(): String = Json.prettyPrint(gameJson)
 
   def controllerEvent(string: String): String =
     controllerEventString = string match
@@ -210,7 +317,27 @@ class Controller @Inject() (var game: GameInterface) extends ControllerInterface
       case "couldNotSave" => "Spielstand konnte nicht gespeichert werden"
       case "couldNotUndo" => "Es konnte Kein Spielzug rückgängig gemacht werden"
       case "couldNotRedo" => "Es konnte kein Spielzug wiederhergestellt werden"
+      case "modelRequestError" => "Fehler bei der Kommunikation mit dem Model"
       case "chooseColor" => "Wähle eine Farbe"
       case "shuffled" => "Verdeckter Kartenstapel wurde neu gemischt"
       case "idle" => controllerEventString
     controllerEventString
+
+  def changeGameJson(alreadyPulledNew: Boolean = (gameJson \ "game" \ "anotherPull").get.toString.toBoolean,
+                     directionNew: Boolean = (gameJson \ "game" \ "direction").get.toString.toBoolean,
+                     activePlayerNew: Int = (gameJson \ "game" \ "activePlayer").get.toString.toInt): Unit =
+    gameJson = Json.obj(
+      "game" -> Json.obj(
+        "numOfPlayers" -> (gameJson \ "game" \ "numOfPlayers").get,
+        "activePlayer" -> activePlayerNew,
+        "direction" -> directionNew,
+        "anotherPull" -> alreadyPulledNew,
+        "specialCard" -> (gameJson \ "game" \ "specialCard").get,
+        "enemy1Cards" -> (gameJson \ "game" \ "enemy1Cards").get,
+        "enemy2Cards" -> (gameJson \ "game" \ "enemy2Cards").get,
+        "enemy3Cards" -> (gameJson \ "game" \ "enemy3Cards").get,
+        "openCardStack" -> (gameJson \ "game" \ "openCardStack").get,
+        "playerCards" -> (gameJson \ "game" \ "playerCards").get,
+        "coveredCardStack" -> (gameJson \ "game" \ "coveredCardStack").get
+      )
+    )

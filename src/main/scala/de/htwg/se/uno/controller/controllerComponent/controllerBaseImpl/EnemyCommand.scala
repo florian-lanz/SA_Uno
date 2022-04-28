@@ -1,33 +1,38 @@
 package de.htwg.se.uno.controller.controllerComponent.controllerBaseImpl
 
-import tools.util.Command
+import akka.actor.typed.ActorSystem
+import akka.actor.typed.scaladsl.Behaviors
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpMethods, HttpRequest}
+import akka.http.scaladsl.unmarshalling.Unmarshaller
+import de.htwg.se.uno.util.Command
+import play.api.libs.json.Json
+import scala.concurrent.ExecutionContextExecutor
 import scala.util.{Failure, Success}
-import de.htwg.se.uno.controller.controllerComponent.GameChanged
 
-class EnemyCommand(controller: Controller, enemyIndex: Int) extends Command:
+class EnemyCommand(controller: Controller, enemyIndex: Int, afterEnemyCommand: () => Unit) extends Command(controller):
+  implicit val system: ActorSystem[Nothing] = ActorSystem(Behaviors.empty, "my-system")
+  implicit val executionContext: ExecutionContextExecutor = system.executionContext
+
   override def doStep(): Unit =
-    controller.game = controller.game.enemy(enemyIndex)
-
-  override def undoStep(): Unit = 
-    controller.redoList = controller.fileIo.gameToString(controller.game) :: controller.redoList
-    val result = controller.fileIo.load(controller.undoList.head)
-    result match
-      case Success(value) => 
-        controller.game = value
-        controller.undoList = controller.undoList.tail
-      case Failure(e) =>
-        controller.redoList = controller.redoList.tail
-        controller.controllerEvent("couldNotUndo")
-        controller.publish(new GameChanged)
-
-  override def redoStep(): Unit =
-    controller.undoList = controller.fileIo.gameToString(controller.game) :: controller.undoList
-    val result = controller.fileIo.load(controller.redoList.head)
-    result match
-      case Success(value) => 
-        controller.game = value
-        controller.redoList = controller.redoList.tail
-      case Failure(e) =>
-        controller.undoList = controller.undoList.tail
-        controller.controllerEvent("couldNotRedo")
-        controller.publish(new GameChanged)
+    Http().singleRequest(
+      HttpRequest(
+        method = HttpMethods.POST,
+        uri = "http://localhost:8082/enemy",
+        entity = HttpEntity(ContentTypes.`application/json`,
+          Json.obj(
+          "enemyIndex" -> enemyIndex,
+          "game" -> controller.gameJson
+          ).toString
+        )
+      )
+    ).onComplete {
+      case Success(value) =>
+        Unmarshaller.stringUnmarshaller(value.entity).onComplete {
+          case Success(value) => 
+            controller.gameJson = Json.parse(value)
+            afterEnemyCommand()
+          case Failure(_) => controller.controllerEvent("modelRequestError")
+        }
+      case Failure(_) => controller.controllerEvent("modelRequestError")
+    }
