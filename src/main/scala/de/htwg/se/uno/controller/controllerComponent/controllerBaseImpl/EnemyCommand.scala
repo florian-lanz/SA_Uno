@@ -18,7 +18,7 @@ class EnemyCommand(controller: Controller, enemyIndex: Int, afterEnemyCommand: (
     Http().singleRequest(
       HttpRequest(
         method = HttpMethods.POST,
-        uri = "http://localhost:8082/enemy",
+        uri = s"http://${controller.modelHttpServer}/enemy",
         entity = HttpEntity(ContentTypes.`application/json`,
           Json.obj(
           "enemyIndex" -> enemyIndex,

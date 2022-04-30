@@ -5,8 +5,6 @@ import com.google.inject.name.Names
 
 import scala.io.Source
 import fileIoComponent.FileIOInterface
-import model.gameComponent.gameBaseImpl.*
-import model.gameComponent.GameInterface
 import play.api.libs.json.{JsValue, Json}
 
 import scala.annotation.tailrec

@@ -89,7 +89,7 @@ class Tui(controller: ControllerInterface) extends Reactor {
     Http().singleRequest(
       HttpRequest(
         method = HttpMethods.POST,
-        uri = "http://localhost:8082/to-string",
+        uri = "http://model-service:8082/to-string",
         entity = HttpEntity(ContentTypes.`application/json`, controller.gameToJson())
       )
     ).onComplete {

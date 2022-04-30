@@ -17,7 +17,7 @@ case class RestService(controller: ControllerInterface):
   implicit val system: ActorSystem[Nothing] = ActorSystem(Behaviors.empty, "my-system")
   implicit val executionContext: ExecutionContextExecutor = system.executionContext
 
-  val interface = "localhost"
+  val interface = "uno-service"
   val port = 8080
 
   def start(): Future[Http.ServerBinding] =

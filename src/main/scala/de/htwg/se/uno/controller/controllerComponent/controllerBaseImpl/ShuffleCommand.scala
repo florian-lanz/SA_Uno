@@ -18,7 +18,7 @@ class ShuffleCommand(controller: Controller, afterShuffleCommand: () => Unit) ex
     Http().singleRequest(
       HttpRequest(
         method = HttpMethods.POST,
-        uri = "http://localhost:8082/shuffle",
+        uri = s"http://${controller.modelHttpServer}/shuffle",
         entity = HttpEntity(ContentTypes.`application/json`, controller.gameJson.toString)
       )
     ).onComplete {

@@ -10,6 +10,7 @@ import play.api.libs.json.{JsValue, Json}
 import model.gameComponent.gameBaseImpl.Game
 
 import scala.concurrent.ExecutionContextExecutor
+import scala.io.StdIn
 
 case object GameService:
   def main(args: Array[String]): Unit =
@@ -17,10 +18,8 @@ case object GameService:
     implicit val system: ActorSystem[Nothing] = ActorSystem(Behaviors.empty, "my-system")
     implicit val executionContext: ExecutionContextExecutor = system.executionContext
 
-    val interface = "localhost"
+    val interface = "model-service"
     val port = 8082
-
-    println(s"Game service started: http://$interface:$port")
 
     val route =
       concat (
@@ -121,3 +120,7 @@ case object GameService:
       )
 
     Http().newServerAt(interface, port).bind(route)
+
+    println(s"Game service started: http://$interface:$port")
+    println("Press return to stop")
+    StdIn.readLine()

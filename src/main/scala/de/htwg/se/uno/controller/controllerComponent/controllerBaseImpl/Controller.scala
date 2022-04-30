@@ -25,12 +25,14 @@ class Controller(var gameJson: JsValue = Json.obj()) extends ControllerInterface
   var redoList: List[String] = List()
   implicit val system: ActorSystem[Nothing] = ActorSystem(Behaviors.empty, "my-system")
   implicit val executionContext: ExecutionContextExecutor = system.executionContext
+  val modelHttpServer: String = sys.env.getOrElse("MODELHTTPSERVER", "localhost:8082")
+  val persistenceHttpServer: String = sys.env.getOrElse("PERSISTENCEHTTPSERVER", "localhost:8081")
 
   def createGame(size: Int): Unit =
     Http().singleRequest(
       HttpRequest(
         method = HttpMethods.POST,
-        uri = "http://localhost:8082/create-game",
+        uri = s"http://$modelHttpServer/create-game",
         entity = HttpEntity(ContentTypes.`application/json`,
           Json.obj(
             "gameSize" -> size
@@ -157,7 +159,7 @@ class Controller(var gameJson: JsValue = Json.obj()) extends ControllerInterface
     Http().singleRequest(
       HttpRequest(
         method = HttpMethods.POST,
-        uri = "http://localhost:8081/save",
+        uri = s"http://$persistenceHttpServer/save",
         entity = HttpEntity(ContentTypes.`application/json`, gameJson.toString)
       )
     ).onComplete {
@@ -183,7 +185,7 @@ class Controller(var gameJson: JsValue = Json.obj()) extends ControllerInterface
     Http().singleRequest(
       HttpRequest(
         method = HttpMethods.GET,
-        uri = "http://localhost:8081/load"
+        uri = s"http://$persistenceHttpServer/load"
       )
     ).onComplete {
       case Success(value) =>
