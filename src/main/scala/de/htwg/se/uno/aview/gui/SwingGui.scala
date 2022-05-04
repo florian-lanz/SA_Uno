@@ -17,6 +17,7 @@ class SwingGui(controller: ControllerInterface) extends Frame {
   title = "HTWG Uno"
 
   def gamePanel = new GridPanel(3, 1) {
+    while controller.gameToJson().equals("{ }") do print("")
     if(controller.getNumOfPlayers <= 3) {
       contents += new GridPanel(1, controller.getNumOfPlayers-1) {
         border = LineBorder(java.awt.Color.WHITE, 20)

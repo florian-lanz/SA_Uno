@@ -19,10 +19,15 @@ import scala.io.StdIn.readLine
   gui.open()
 
   var input: String = ""
-  input = readLine()
-  tui.processInputLine(input)
-  while input != "q" do
+  if Console.in.ready() then
     input = readLine()
     tui.processInputLine(input)
-
+  else
+    input = ""
+  while input != "q" do
+    if Console.in.ready() then
+      input = readLine()
+      tui.processInputLine(input)
+    else
+      input = ""
   restService.stop(server)

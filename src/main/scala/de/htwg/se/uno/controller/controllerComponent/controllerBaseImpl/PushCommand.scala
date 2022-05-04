@@ -18,7 +18,7 @@ class PushCommand(string: String, color: Int, controller: Controller, afterPushC
     Http().singleRequest(
       HttpRequest(
         method = HttpMethods.POST,
-        uri = "http://localhost:8082/push-move",
+        uri = s"http://${controller.modelHttpServer}/push-move",
         entity = HttpEntity(ContentTypes.`application/json`,
           Json.obj(
             "cardString" -> string,

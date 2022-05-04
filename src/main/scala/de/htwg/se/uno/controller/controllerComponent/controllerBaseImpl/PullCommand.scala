@@ -18,7 +18,7 @@ class PullCommand(controller: Controller, afterPullCommand: () => Unit) extends 
     Http().singleRequest(
       HttpRequest(
         method = HttpMethods.POST,
-        uri = "http://localhost:8082/pull-move",
+        uri = s"http://${controller.modelHttpServer}/pull-move",
         entity = HttpEntity(ContentTypes.`application/json`, controller.gameJson.toString)
       )
     ).onComplete {
