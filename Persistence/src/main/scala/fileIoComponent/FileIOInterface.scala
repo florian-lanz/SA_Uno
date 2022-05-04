@@ -1,6 +1,5 @@
 package fileIoComponent
 
-import model.gameComponent.GameInterface
 import play.api.libs.json.JsValue
 import scala.util.Try
 

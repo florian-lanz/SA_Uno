@@ -8,6 +8,7 @@ import akka.http.scaladsl.server.Directives.*
 import fileIoComponent.fileIoJsonImpl.FileIO
 
 import scala.concurrent.ExecutionContextExecutor
+import scala.io.StdIn
 import scala.util.{Failure, Success}
 
 case object FileIOService:
@@ -16,10 +17,8 @@ case object FileIOService:
     implicit val system: ActorSystem[Nothing] = ActorSystem(Behaviors.empty, "my-system")
     implicit val executionContext: ExecutionContextExecutor = system.executionContext
 
-    val interface = "localhost"
+    val interface = "persistence-service"
     val port = 8081
-
-    println(s"FileIO service started: http://$interface:$port")
 
     val route =
       concat (
@@ -53,3 +52,7 @@ case object FileIOService:
       )
 
     Http().newServerAt(interface, port).bind(route)
+
+    println(s"FileIO service started: http://$interface:$port")
+    println("Press return to stop")
+    StdIn.readLine()
