@@ -1,19 +1,19 @@
-package fileIoComponent
+package persistence
 
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity}
-import akka.http.scaladsl.server.Directives.*
+import akka.http.scaladsl.server.Directives.{as, complete, concat, entity, get, path, post}
 import fileIoComponent.fileIoJsonImpl.FileIO
 
 import scala.concurrent.ExecutionContextExecutor
 import scala.io.StdIn
 import scala.util.{Failure, Success}
 
-case object FileIOService:
+case object PersistenceService:
   def main(args: Array[String]): Unit =
-    val fileIO = FileIO()
+    val persistence = Slick
     implicit val system: ActorSystem[Nothing] = ActorSystem(Behaviors.empty, "my-system")
     implicit val executionContext: ExecutionContextExecutor = system.executionContext
 
@@ -21,7 +21,7 @@ case object FileIOService:
     val port = 8081
 
     val route =
-      concat (
+      concat(
         get {
           path("") {
             val apiInfo =
@@ -35,7 +35,8 @@ case object FileIOService:
         },
         get {
           path("load") {
-            fileIO.load() match
+            println("LOAD 1")
+            persistence.load() match
               case Success(game) => complete(HttpEntity(ContentTypes.`application/json`, game))
               case Failure(e) => 
                 println(e.printStackTrace())
@@ -45,7 +46,9 @@ case object FileIOService:
         post {
           path("save") {
             entity(as[String]) { game =>
-              fileIO.save(game) match
+              println("HERE 1")
+              println(game)
+              persistence.save(game) match
                 case Success(s) => complete("Success")
                 case Failure(e) => complete("Failure")
             }
