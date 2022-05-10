@@ -37,7 +37,9 @@ case object FileIOService:
           path("load") {
             fileIO.load() match
               case Success(game) => complete(HttpEntity(ContentTypes.`application/json`, game))
-              case Failure(e) => complete("Failure")
+              case Failure(e) => 
+                println(e.printStackTrace())
+                complete("Failure")
           }
         },
         post {
