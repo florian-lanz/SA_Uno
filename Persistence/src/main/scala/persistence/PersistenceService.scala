@@ -34,11 +34,19 @@ case object PersistenceService:
           }
         },
         get {
-          path("load") {
-            println("LOAD 1")
-            persistence.load() match
+          path("load" / IntNumber) { id =>
+          persistence.load(id) match
               case Success(game) => complete(HttpEntity(ContentTypes.`application/json`, game))
               case Failure(e) => 
+                println(e.printStackTrace())
+                complete("Failure")
+          }
+        },
+        get {
+          path("delete" / IntNumber) { id =>
+            persistence.delete(id) match
+              case Success(game) => case Success(s) => complete("Success")
+              case Failure(e) =>
                 println(e.printStackTrace())
                 complete("Failure")
           }

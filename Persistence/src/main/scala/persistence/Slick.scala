@@ -52,10 +52,11 @@ object Slick extends PersistenceInterface:
         ))
       }
 
-  override def load(): Try[String] =
+  override def load(id: Int): Try[String] =
+    println("Loading game from MySQL")
     Try{
-      val actionQuery = sql"""SELECT * FROM GAME ORDER BY ID DESC LIMIT 1""".as[(Int, Int, Int, Boolean, Boolean, Int, String, String, String, String, String, String)]
-      val result = Await.result(database.run(actionQuery), 2.second)
+      val query = (if id == 0 then sql"""SELECT * FROM GAME ORDER BY ID DESC LIMIT 1""" else sql"""SELECT * FROM GAME WHERE ID = $id""").as[(Int, Int, Int, Boolean, Boolean, Int, String, String, String, String, String, String)]
+      val result = Await.result(database.run(query), 2.second)
       Json.obj(
         "game" -> Json.obj(
           "numOfPlayers" -> JsNumber(result(0)(1)),
@@ -71,4 +72,11 @@ object Slick extends PersistenceInterface:
           "enemy3Cards" -> JsArray(for card <- result(0)(11).split(",").toList yield JsString(card))
         )
       ).toString()
+    }
+
+  override def delete(id: Int): Try[Unit] =
+    println("Deleting game in MySQL")
+    Try{
+      val query = if id == 0 then gameTable.delete else gameTable.filter(_.id === id).delete
+      database.run(query)
     }
