@@ -3,8 +3,8 @@ package persistence
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity}
-import akka.http.scaladsl.server.Directives.{as, complete, concat, entity, get, path, post}
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpMethods, HttpRequest}
+import akka.http.scaladsl.server.Directives.*
 import fileIoComponent.fileIoJsonImpl.FileIO
 
 import scala.concurrent.ExecutionContextExecutor
@@ -45,7 +45,7 @@ case object PersistenceService:
         get {
           path("delete" / IntNumber) { id =>
             persistence.delete(id) match
-              case Success(game) => case Success(s) => complete("Success")
+              case Success(game) => complete("Success")
               case Failure(e) =>
                 println(e.printStackTrace())
                 complete("Failure")

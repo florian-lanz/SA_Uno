@@ -77,6 +77,6 @@ object Slick extends PersistenceInterface:
   override def delete(id: Int): Try[Unit] =
     println("Deleting game in MySQL")
     Try{
-      val query = if id == 0 then gameTable.delete else gameTable.filter(_.id === id).delete
+      val query = (if id == 0 then sql"""DELETE FROM GAME""" else sql"""DELETE FROM GAME WHERE ID = $id""").as[Unit]
       database.run(query)
     }
