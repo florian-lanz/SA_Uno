@@ -103,7 +103,7 @@ case class RestService(controller: ControllerInterface):
           }
         },
         get {
-          path("load" / IntNumber) { id =>
+          path("load" / Remaining) { id =>
             controller.load(id)
             complete(HttpEntity(ContentTypes.`application/json`, controller.gameToJson()))
           }
@@ -115,7 +115,7 @@ case class RestService(controller: ControllerInterface):
           }
         },
         get {
-          path("delete" / IntNumber) { id =>
+          path("delete" / Remaining) { id =>
             controller.delete(id)
             complete(HttpEntity(ContentTypes.`application/json`, controller.gameToJson()))
           }

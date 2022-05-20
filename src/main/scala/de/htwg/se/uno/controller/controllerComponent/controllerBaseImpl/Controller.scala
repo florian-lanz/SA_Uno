@@ -206,7 +206,7 @@ class Controller(var gameJson: JsValue = Json.obj()) extends ControllerInterface
         publish(new GameChanged)
     }
   
-  def load(id: Int = 0): Unit =
+  def load(id: String = "0"): Unit =
     Http().singleRequest(
       HttpRequest(
         method = HttpMethods.GET,

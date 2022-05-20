@@ -17,6 +17,7 @@ object dependencies {
     val slickHikaricp = ("com.typesafe.slick" %% "slick-hikaricp" % versionNumber.slickHikaricp).cross(CrossVersion.for3Use2_13)
     val mysql = "mysql" % "mysql-connector-java" % versionNumber.mysql
     val githubSlick = "com.github.slick.slick" % "slick_3" % versionNumber.githubSlick
+    val mongoDb = ("org.mongodb.scala" %% "mongo-scala-driver" % versionNumber.mongoDb).cross(CrossVersion.for3Use2_13)
 }
 
 object versionNumber {
@@ -33,4 +34,5 @@ object versionNumber {
     val slickHikaricp = "3.3.3"
     val mysql = "8.0.29"
     val githubSlick = "nafg~dottyquery-SNAPSHOT"
+    val mongoDb = "4.6.0"
 }

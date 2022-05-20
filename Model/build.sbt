@@ -20,7 +20,8 @@ lazy val commonDependencies = Seq(
   dependencies.slick,
   dependencies.slickHikaricp,
   dependencies.mysql,
-  dependencies.githubSlick
+  dependencies.githubSlick,
+  dependencies.mongoDb
 )
 
 libraryDependencies ++= commonDependencies

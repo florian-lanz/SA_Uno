@@ -16,7 +16,8 @@ lazy val commonDependencies = Seq(
   dependencies.akkaHttp,
   dependencies.slf4jNop,
   dependencies.mysql,
-  dependencies.githubSlick
+  dependencies.githubSlick,
+  dependencies.mongoDb
 )
 
 resolvers += "jitpack" at "https://jitpack.io"
