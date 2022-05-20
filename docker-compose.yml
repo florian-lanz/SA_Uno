@@ -12,6 +12,16 @@ services:
       MYSQL_PASSWORD: uno
     volumes:
       - .:/var/lib/sql/uno
+  mongodb:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: UNO
+    ports:
+      - "27017:27017"
+    volumes:
+      - .:/var/lib/mongo/uno
   model:
     container_name: "model-service"
     build:
@@ -30,6 +40,7 @@ services:
       - "8081:8081"
     environment:
       - DATABASE_HOST=sqldb:3306
+      - MONGODB_HOST=mongodb:27017
       - MYSQL_USER=uno
       - MYSQL_PASSWORD=uno
     stdin_open: true

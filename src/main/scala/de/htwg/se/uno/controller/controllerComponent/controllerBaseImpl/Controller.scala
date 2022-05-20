@@ -181,7 +181,7 @@ class Controller(var gameJson: JsValue = Json.obj()) extends ControllerInterface
         publish(new GameChanged)
     }
 
-  def delete(id: Int = 0): Unit =
+  def delete(id: String = "0"): Unit =
     Http().singleRequest(
       HttpRequest(
         method = HttpMethods.GET,

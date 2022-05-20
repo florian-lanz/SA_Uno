@@ -1,5 +1,6 @@
-package persistence
-import persistence.sqlTables.GameTable
+package persistence.dbComponent
+import persistence.PersistenceInterface
+import persistence.dbComponent.sqlTables.GameTable
 
 import scala.util.Try
 import slick.dbio.{DBIO, Effect}
@@ -36,26 +37,27 @@ object Slick extends PersistenceInterface:
     println("Saving game in MySQL")
     val gameJson = Json.parse(json)
     Try{
-        database.run(gameTable += (
-          0,
-          (gameJson \ "game" \ "numOfPlayers").get.toString.toInt,
-          (gameJson \ "game" \ "activePlayer").get.toString.toInt,
-          (gameJson \ "game" \ "direction").get.toString.toBoolean,
-          (gameJson \ "game" \ "anotherPull").get.toString.toBoolean,
-          (gameJson \ "game" \ "specialCard").get.toString.toInt,
-          (gameJson \ "game" \ "playerCards").as[List[String]].mkString(","),
-          (gameJson \ "game" \ "openCardStack").as[List[String]].mkString(","),
-          (gameJson \ "game" \ "coveredCardStack").as[List[String]].mkString(","),
-          (gameJson \ "game" \ "enemy1Cards").as[List[String]].mkString(","),
-          (gameJson \ "game" \ "enemy2Cards").as[List[String]].mkString(","),
-          (gameJson \ "game" \ "enemy3Cards").as[List[String]].mkString(",")
-        ))
-      }
+      database.run(gameTable += (
+        0,
+        (gameJson \ "game" \ "numOfPlayers").get.toString.toInt,
+        (gameJson \ "game" \ "activePlayer").get.toString.toInt,
+        (gameJson \ "game" \ "direction").get.toString.toBoolean,
+        (gameJson \ "game" \ "anotherPull").get.toString.toBoolean,
+        (gameJson \ "game" \ "specialCard").get.toString.toInt,
+        (gameJson \ "game" \ "playerCards").as[List[String]].mkString(","),
+        (gameJson \ "game" \ "openCardStack").as[List[String]].mkString(","),
+        (gameJson \ "game" \ "coveredCardStack").as[List[String]].mkString(","),
+        (gameJson \ "game" \ "enemy1Cards").as[List[String]].mkString(","),
+        (gameJson \ "game" \ "enemy2Cards").as[List[String]].mkString(","),
+        (gameJson \ "game" \ "enemy3Cards").as[List[String]].mkString(",")
+      ))
+    }
 
-  override def load(id: Int): Try[String] =
+  override def load(id: String): Try[String] =
     println("Loading game from MySQL")
     Try{
-      val query = (if id == 0 then sql"""SELECT * FROM GAME ORDER BY ID DESC LIMIT 1""" else sql"""SELECT * FROM GAME WHERE ID = $id""").as[(Int, Int, Int, Boolean, Boolean, Int, String, String, String, String, String, String)]
+      val intId = id.toInt
+      val query = (if intId == 0 then sql"""SELECT * FROM GAME ORDER BY ID DESC LIMIT 1""" else sql"""SELECT * FROM GAME WHERE ID = $intId""").as[(Int, Int, Int, Boolean, Boolean, Int, String, String, String, String, String, String)]
       val result = Await.result(database.run(query), 2.second)
       Json.obj(
         "game" -> Json.obj(
@@ -74,9 +76,10 @@ object Slick extends PersistenceInterface:
       ).toString()
     }
 
-  override def delete(id: Int): Try[Unit] =
+  override def delete(id: String): Try[Unit] =
     println("Deleting game in MySQL")
     Try{
-      val query = (if id == 0 then sql"""DELETE FROM GAME""" else sql"""DELETE FROM GAME WHERE ID = $id""").as[Unit]
+      val intId = id.toInt
+      val query = (if intId == 0 then sql"""DELETE FROM GAME""" else sql"""DELETE FROM GAME WHERE ID = $intId""").as[Unit]
       database.run(query)
     }

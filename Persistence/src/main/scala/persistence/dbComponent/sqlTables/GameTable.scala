@@ -1,4 +1,4 @@
-package persistence.sqlTables
+package persistence.dbComponent.sqlTables
 
 import slick.jdbc.MySQLProfile.api._
 

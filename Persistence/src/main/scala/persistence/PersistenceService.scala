@@ -5,7 +5,7 @@ import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpMethods, HttpRequest}
 import akka.http.scaladsl.server.Directives.*
-import fileIoComponent.fileIoJsonImpl.FileIO
+import persistence.dbComponent.{MongoDB, Slick}
 
 import scala.concurrent.ExecutionContextExecutor
 import scala.io.StdIn
@@ -13,7 +13,7 @@ import scala.util.{Failure, Success}
 
 case object PersistenceService:
   def main(args: Array[String]): Unit =
-    val persistence = Slick
+    val persistence = MongoDB
     implicit val system: ActorSystem[Nothing] = ActorSystem(Behaviors.empty, "my-system")
     implicit val executionContext: ExecutionContextExecutor = system.executionContext
 
@@ -34,16 +34,16 @@ case object PersistenceService:
           }
         },
         get {
-          path("load" / IntNumber) { id =>
-          persistence.load(id) match
+          path("load" / Remaining) { id =>
+            persistence.load(id) match
               case Success(game) => complete(HttpEntity(ContentTypes.`application/json`, game))
-              case Failure(e) => 
+              case Failure(e) =>
                 println(e.printStackTrace())
                 complete("Failure")
           }
         },
         get {
-          path("delete" / IntNumber) { id =>
+          path("delete" / Remaining) { id =>
             persistence.delete(id) match
               case Success(game) => complete("Success")
               case Failure(e) =>
