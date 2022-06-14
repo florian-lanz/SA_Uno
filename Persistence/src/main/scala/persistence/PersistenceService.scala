@@ -37,9 +37,7 @@ case object PersistenceService:
           path("load" / Remaining) { id =>
             persistence.load(id) match
               case Success(game) => complete(HttpEntity(ContentTypes.`application/json`, game))
-              case Failure(e) =>
-                println(e.printStackTrace())
-                complete("Failure")
+              case Failure(e) => complete("Failure")
           }
         },
         get {
@@ -54,8 +52,6 @@ case object PersistenceService:
         post {
           path("save") {
             entity(as[String]) { game =>
-              println("HERE 1")
-              println(game)
               persistence.save(game) match
                 case Success(s) => complete("Success")
                 case Failure(e) => complete("Failure")

@@ -38,12 +38,11 @@ object MongoDB extends PersistenceInterface:
     }
 
   override def load(id: String): Try[String] =
-    println("Loading game in MongoDB")
     Try{
       implicit val system: ActorSystem[Nothing] = ActorSystem(Behaviors.empty, "SingleRequest")
       implicit val executionContext: ExecutionContextExecutor = system.executionContext
       if id.equals("0") then
-        Await.result(gameCollection.find().sort(descending("_id")).limit(1).projection(excludeId()).head().map(_.toJson), 2.second)
+        Await.result(gameCollection.find().limit(1).sort(descending("_id")).projection(excludeId()).head().map(_.toJson), 2.second)
       else
         Await.result(gameCollection.find(equal("_id", new ObjectId(id))).projection(excludeId()).head().map(_.toJson), 2.second)
     }
@@ -52,13 +51,7 @@ object MongoDB extends PersistenceInterface:
     println(s"Deleting game in MongoDB")
     Try{
       if id.equals("0") then
-        gameCollection.deleteMany(notEqual("_id", new ObjectId("000000000000000000000000"))).subscribe(
-        (_: DeleteResult) => print(s"Deleted all documents\n"),
-        (e: Throwable) => print(s"Error when deleting all documents: $e\n")
-      )
+        gameCollection.deleteMany(notEqual("_id", new ObjectId("000000000000000000000000")))
       else
-        gameCollection.deleteOne(equal("_id", new ObjectId(id))).subscribe(
-          (_: DeleteResult) => print(s"Deleted document with id $id\n"),
-          (e: Throwable) => print(s"Error when deleting the document with id $id: $e\n")
-        )
+        gameCollection.deleteOne(equal("_id", new ObjectId(id)))
     }
