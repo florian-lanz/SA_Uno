@@ -44,9 +44,7 @@ case object PersistenceService:
           path("delete" / Remaining) { id =>
             persistence.delete(id) match
               case Success(game) => complete("Success")
-              case Failure(e) =>
-                println(e.printStackTrace())
-                complete("Failure")
+              case Failure(e) => complete("Failure")
           }
         },
         post {

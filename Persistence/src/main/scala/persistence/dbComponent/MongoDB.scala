@@ -24,17 +24,16 @@ object MongoDB extends PersistenceInterface:
   val gameCollection: MongoCollection[Document] = database.getCollection("game")
 
   override def save(json: String): Try[Unit] =
-    println("Saving game in MongoDB")
     val game: Document = Document.apply(json)
     Try {
       val insertObservable: SingleObservable[InsertOneResult] = gameCollection.insertOne(game)
-      insertObservable.subscribe(new Observer[InsertOneResult] {
-        override def onNext(result: InsertOneResult): Unit = printf(s"inserted: $result\n")
-
-        override def onError(e: Throwable): Unit = printf(s"failed: $e\n")
-
-        override def onComplete(): Unit = printf(s"completed\n")
-      })
+//      insertObservable.subscribe(new Observer[InsertOneResult] {
+//        override def onNext(result: InsertOneResult): Unit = printf(s"inserted: $result\n")
+//
+//        override def onError(e: Throwable): Unit = printf(s"failed: $e\n")
+//
+//        override def onComplete(): Unit = printf(s"completed\n")
+//      })
     }
 
   override def load(id: String): Try[String] =
