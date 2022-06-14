@@ -33,53 +33,47 @@ object Slick extends PersistenceInterface:
   val setup: DBIOAction[Unit, NoStream, Effect.Schema] = DBIO.seq(gameTable.schema.createIfNotExists)
   database.run(setup)
 
-  override def save(json: String): Try[Unit] =
+  override def save(json: String): Future[Any] =
     println("Saving game in MySQL")
     val gameJson = Json.parse(json)
-    Try{
-      database.run(gameTable += (
-        0,
-        (gameJson \ "game" \ "numOfPlayers").get.toString.toInt,
-        (gameJson \ "game" \ "activePlayer").get.toString.toInt,
-        (gameJson \ "game" \ "direction").get.toString.toBoolean,
-        (gameJson \ "game" \ "anotherPull").get.toString.toBoolean,
-        (gameJson \ "game" \ "specialCard").get.toString.toInt,
-        (gameJson \ "game" \ "playerCards").as[List[String]].mkString(","),
-        (gameJson \ "game" \ "openCardStack").as[List[String]].mkString(","),
-        (gameJson \ "game" \ "coveredCardStack").as[List[String]].mkString(","),
-        (gameJson \ "game" \ "enemy1Cards").as[List[String]].mkString(","),
-        (gameJson \ "game" \ "enemy2Cards").as[List[String]].mkString(","),
-        (gameJson \ "game" \ "enemy3Cards").as[List[String]].mkString(",")
-      ))
-    }
+    database.run(gameTable += (
+      0,
+      (gameJson \ "game" \ "numOfPlayers").get.toString.toInt,
+      (gameJson \ "game" \ "activePlayer").get.toString.toInt,
+      (gameJson \ "game" \ "direction").get.toString.toBoolean,
+      (gameJson \ "game" \ "anotherPull").get.toString.toBoolean,
+      (gameJson \ "game" \ "specialCard").get.toString.toInt,
+      (gameJson \ "game" \ "playerCards").as[List[String]].mkString(","),
+      (gameJson \ "game" \ "openCardStack").as[List[String]].mkString(","),
+      (gameJson \ "game" \ "coveredCardStack").as[List[String]].mkString(","),
+      (gameJson \ "game" \ "enemy1Cards").as[List[String]].mkString(","),
+      (gameJson \ "game" \ "enemy2Cards").as[List[String]].mkString(","),
+      (gameJson \ "game" \ "enemy3Cards").as[List[String]].mkString(",")
+    ))
 
-  override def load(id: String): Try[String] =
+  override def load(id: String): Future[String] =
     println("Loading game from MySQL")
-    Try{
-      val intId = id.toInt
-      val query = (if intId == 0 then sql"""SELECT * FROM GAME ORDER BY ID DESC LIMIT 1""" else sql"""SELECT * FROM GAME WHERE ID = $intId""").as[(Int, Int, Int, Boolean, Boolean, Int, String, String, String, String, String, String)]
-      val result = Await.result(database.run(query), 2.second)
-      Json.obj(
-        "game" -> Json.obj(
-          "numOfPlayers" -> JsNumber(result(0)(1)),
-          "activePlayer" -> JsNumber(result(0)(2)),
-          "direction" -> JsBoolean(result(0)(3)),
-          "anotherPull" -> JsBoolean(result(0)(4)),
-          "specialCard" -> JsNumber(result(0)(5)),
-          "playerCards" -> JsArray(for card <- result(0)(6).split(",").toList yield JsString(card)),
-          "openCardStack" -> JsArray(for card <- result(0)(7).split(",").toList yield JsString(card)),
-          "coveredCardStack" -> JsArray(for card <- result(0)(8).split(",").toList yield JsString(card)),
-          "enemy1Cards" -> JsArray(for card <- result(0)(9).split(",").toList yield JsString(card)),
-          "enemy2Cards" -> JsArray(for card <- result(0)(10).split(",").toList yield JsString(card)),
-          "enemy3Cards" -> JsArray(for card <- result(0)(11).split(",").toList yield JsString(card))
-        )
-      ).toString()
-    }
+    val intId = id.toInt
+    val query = (if intId == 0 then sql"""SELECT * FROM GAME ORDER BY ID DESC LIMIT 1""" else sql"""SELECT * FROM GAME WHERE ID = $intId""").as[(Int, Int, Int, Boolean, Boolean, Int, String, String, String, String, String, String)]
+    val result = Await.result(database.run(query), 2.second)
+    Future(Json.obj(
+      "game" -> Json.obj(
+        "numOfPlayers" -> JsNumber(result(0)(1)),
+        "activePlayer" -> JsNumber(result(0)(2)),
+        "direction" -> JsBoolean(result(0)(3)),
+        "anotherPull" -> JsBoolean(result(0)(4)),
+        "specialCard" -> JsNumber(result(0)(5)),
+        "playerCards" -> JsArray(for card <- result(0)(6).split(",").toList yield JsString(card)),
+        "openCardStack" -> JsArray(for card <- result(0)(7).split(",").toList yield JsString(card)),
+        "coveredCardStack" -> JsArray(for card <- result(0)(8).split(",").toList yield JsString(card)),
+        "enemy1Cards" -> JsArray(for card <- result(0)(9).split(",").toList yield JsString(card)),
+        "enemy2Cards" -> JsArray(for card <- result(0)(10).split(",").toList yield JsString(card)),
+        "enemy3Cards" -> JsArray(for card <- result(0)(11).split(",").toList yield JsString(card))
+      )
+    ).toString())
 
-  override def delete(id: String): Try[Unit] =
+  override def delete(id: String): Future[Any] =
     println("Deleting game in MySQL")
-    Try{
-      val intId = id.toInt
-      val query = (if intId == 0 then sql"""DELETE FROM GAME""" else sql"""DELETE FROM GAME WHERE ID = $intId""").as[Unit]
-      database.run(query)
-    }
+    val intId = id.toInt
+    val query = (if intId == 0 then sql"""DELETE FROM GAME""" else sql"""DELETE FROM GAME WHERE ID = $intId""").as[Unit]
+    database.run(query)

@@ -1,8 +1,8 @@
 package persistence
 
-import scala.util.Try
+import scala.concurrent.Future
 
 trait PersistenceInterface:
-  def load(id: String): Try[String]
-  def save(json: String): Try[Unit]
-  def delete(id: String): Try[Unit]
+  def load(id: String): Future[String]
+  def save(json: String): Future[Any]
+  def delete(id: String): Future[Any]

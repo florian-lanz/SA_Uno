@@ -3,11 +3,12 @@ package persistence
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpMethods, HttpRequest}
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, HttpMethods, HttpRequest, StatusCode}
 import akka.http.scaladsl.server.Directives.*
 import persistence.dbComponent.{MongoDB, Slick}
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContextExecutor}
 import scala.io.StdIn
 import scala.util.{Failure, Success}
 
@@ -35,24 +36,20 @@ case object PersistenceService:
         },
         get {
           path("load" / Remaining) { id =>
-            persistence.load(id) match
-              case Success(game) => complete(HttpEntity(ContentTypes.`application/json`, game))
-              case Failure(e) => complete("Failure")
+            complete(HttpEntity(ContentTypes.`application/json`, Await.result(persistence.load(id), Duration.Inf)))
           }
         },
         get {
           path("delete" / Remaining) { id =>
-            persistence.delete(id) match
-              case Success(game) => complete("Success")
-              case Failure(e) => complete("Failure")
+            persistence.delete(id)
+            complete(HttpResponse.apply(StatusCode.int2StatusCode(200)))
           }
         },
         post {
           path("save") {
             entity(as[String]) { game =>
-              persistence.save(game) match
-                case Success(s) => complete("Success")
-                case Failure(e) => complete("Failure")
+              persistence.save(game)
+              complete(HttpResponse.apply(StatusCode.int2StatusCode(200)))
             }
           }
         }
