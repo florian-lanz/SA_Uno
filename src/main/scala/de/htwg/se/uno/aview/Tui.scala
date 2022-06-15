@@ -56,7 +56,16 @@ class Tui(controller: ControllerInterface) extends Reactor {
         controller.save()
         Success("Valid Command: " + input)
       case "ld" =>
-        controller.load()
+        if wf.length > 1 then
+          controller.load(wf(2))
+        else
+          controller.load()
+        Success("Valid Command: " + input)
+      case "dl" =>
+        if wf.length > 1 then
+          controller.delete(wf(2))
+        else
+          controller.delete()
         Success("Valid Command: " + input)
       case "d" =>
         if (controller.nextTurn()) {

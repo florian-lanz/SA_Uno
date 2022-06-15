@@ -253,55 +253,25 @@ case class Game (
     val cardEmpty = "|       |  "
     val coveredCard = "|  Uno  |  "
     val cardBottom = "└-------┘  "
-    @tailrec
-    def enemy1CardsRecursion(i: Int, enemyList: List[String]): List[String] =
-      if i < enemies.head.enemyCards.length then
-        enemy1CardsRecursion(i + 1, List(enemyList.head + cardTop, enemyList(1) + cardEmpty, enemyList(2) + coveredCard, enemyList(3) + cardBottom))
-      else
-        enemyList
-    val enemy1Cards = enemy1CardsRecursion(0, List("", "", "", ""))
-    @tailrec
-    def playerCardsRecursion(i: Int, playerList: List[String]): List[String] =
-      if i < player.handCards.length then
-        playerCardsRecursion(i + 1, List(playerList.head + cardTop, playerList(1) + cardEmpty, playerList(2) + "|  " + player.handCards(i).toString + "  |  ", playerList(3) + cardBottom))
-      else
-        playerList
-    val playerCards = playerCardsRecursion(0, List("", "", "", ""))
-    val centerCardsTop = cardTop + "           ┌-------┐" + "\n"
-    val centerCardsEmpty = cardEmpty + "           |       |" + "\n"
-    val centerCardsText = coveredCard + "           |  " + revealedCards.head.toString + "  |" + "\n"
-    val centerCardsBottom = cardBottom + "           └-------┘" + "\n"
-    val enemy2Cards = if numOfPlayers >= 3 then
-      @tailrec
-      def enemy2CardsRecursion(i: Int, enemyList: List[String]): List[String] =
-        if i < enemies(1).enemyCards.length then
-          enemy2CardsRecursion(i + 1, List(enemyList.head + cardTop, enemyList(1) + cardEmpty, enemyList(2) + coveredCard, enemyList(3) + cardBottom))
-        else
-          enemyList
-      enemy2CardsRecursion(0, List("", "", "", ""))
-    else
-      List("", "", "", "")
-    val enemy3Cards = if numOfPlayers >= 4 then
-      @tailrec
-      def enemy3CardsRecursion(i: Int, enemyList: List[String]): List[String] =
-        if i < enemies(2).enemyCards.length then
-          enemy3CardsRecursion(i + 1, List(enemyList.head + cardTop, enemyList(1) + cardEmpty, enemyList(2) + coveredCard, enemyList(3) + cardBottom))
-        else
-          enemyList
-      enemy3CardsRecursion(0, List("", "", "", ""))
-    else
-      List("", "", "", "")
-    enemy1Cards.head + "\t\t\t\t\t" + enemy2Cards.head + "\n" +
-      enemy1Cards(1) + "\t\t\t\t\t" + enemy2Cards(1) + "\n" +
-      enemy1Cards(2) + "\t\t\t\t\t" + enemy2Cards(2) + "\n" +
-      enemy1Cards(1) + "\t\t\t\t\t" + enemy2Cards(1) + "\n" +
-      enemy1Cards(3) + "\t\t\t\t\t" + enemy2Cards(3) + "\n\n" +
-      centerCardsTop + centerCardsEmpty + centerCardsText + centerCardsEmpty + centerCardsBottom +
-      playerCards.head + "\t\t\t\t\t" + enemy3Cards.head + "\n" +
-      playerCards(1) + "\t\t\t\t\t" + enemy3Cards(1) + "\n" +
-      playerCards(2) + "\t\t\t\t\t" + enemy3Cards(2) + "\n" +
-      playerCards(1) + "\t\t\t\t\t" + enemy3Cards(1) + "\n" +
-      playerCards(3) + "\t\t\t\t\t" + enemy3Cards(3)
+    val centerCardsTop = cardTop + "           ┌-------┐\n"
+    val centerCardsEmpty = cardEmpty + "           |       |\n"
+    val centerCardsText = coveredCard + "           |  " + revealedCards.head.toString + "  |\n"
+    val centerCardsBottom = cardBottom + "           └-------┘\n"
+    val spaces = "\t\t\t\t\t"
+
+    (StringBuilder()
+      ++= (for _ <- enemies.head.enemyCards.indices yield cardTop).mkString("") ++= spaces ++= (for _ <- enemies(1).enemyCards.indices yield cardTop).mkString("") ++= "\n"
+      ++= (for _ <- enemies.head.enemyCards.indices yield cardEmpty).mkString("") ++= spaces ++= (for _ <- enemies(1).enemyCards.indices yield cardEmpty).mkString("") ++= "\n"
+      ++= (for _ <- enemies.head.enemyCards.indices yield coveredCard).mkString("") ++= spaces ++= (for _ <- enemies(1).enemyCards.indices yield coveredCard).mkString("") ++= "\n"
+      ++= (for _ <- enemies.head.enemyCards.indices yield cardEmpty).mkString("") ++= spaces ++= (for _ <- enemies(1).enemyCards.indices yield cardEmpty).mkString("") ++= "\n"
+      ++= (for _ <- enemies.head.enemyCards.indices yield cardBottom).mkString("") ++= spaces ++= (for _ <- enemies(1).enemyCards.indices yield cardBottom).mkString("") ++= "\n"
+      ++= centerCardsTop ++= centerCardsEmpty ++= centerCardsText ++= centerCardsEmpty ++= centerCardsBottom
+      ++= (for _ <- player.handCards.indices yield cardTop).mkString("") ++= spaces ++= (for _ <- enemies(2).enemyCards.indices yield cardTop).mkString("") ++= "\n"
+      ++= (for _ <- player.handCards.indices yield cardEmpty).mkString("") ++= spaces ++= (for _ <- enemies(2).enemyCards.indices yield cardEmpty).mkString("") ++= "\n"
+      ++= player.handCards.map(card => "|  " + card + "  |  ").mkString("") ++= spaces ++= (for _ <- enemies(2).enemyCards.indices yield coveredCard).mkString("") ++= "\n"
+      ++= (for _ <- player.handCards.indices yield cardEmpty).mkString("") ++= spaces ++= (for _ <- enemies(2).enemyCards.indices yield cardEmpty).mkString("") ++= "\n"
+      ++= (for _ <- player.handCards.indices yield cardBottom).mkString("") ++= spaces ++= (for _ <- enemies(2).enemyCards.indices yield cardBottom).mkString("")
+      ).toString
 
   def gameToJson(): String =
     Json.obj(

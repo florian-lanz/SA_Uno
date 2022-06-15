@@ -181,11 +181,36 @@ class Controller(var gameJson: JsValue = Json.obj()) extends ControllerInterface
         publish(new GameChanged)
     }
 
-  def load(): Unit =
+  def delete(id: String = "0"): Unit =
     Http().singleRequest(
       HttpRequest(
         method = HttpMethods.GET,
-        uri = s"http://$persistenceHttpServer/load"
+        uri = s"http://$persistenceHttpServer/delete/$id"
+      )
+    ).onComplete {
+      case Success(value) =>
+        Unmarshaller.stringUnmarshaller(value.entity).onComplete {
+          case Success(value) =>
+            if value.equals("Success") then
+              controllerEvent("delete")
+              publish(new GameChanged)
+            else
+              controllerEvent("couldNotDelete")
+              publish(new GameChanged)
+          case Failure(e) =>
+            controllerEvent("couldNotDelete")
+            publish(new GameChanged)
+        }
+      case Failure(e) =>
+        controllerEvent("couldNotDelete")
+        publish(new GameChanged)
+    }
+  
+  def load(id: String = "0"): Unit =
+    Http().singleRequest(
+      HttpRequest(
+        method = HttpMethods.GET,
+        uri = s"http://$persistenceHttpServer/load/$id"
       )
     ).onComplete {
       case Success(value) =>
@@ -322,6 +347,8 @@ class Controller(var gameJson: JsValue = Json.obj()) extends ControllerInterface
       case "modelRequestError" => "Fehler bei der Kommunikation mit dem Model"
       case "chooseColor" => "Wähle eine Farbe"
       case "shuffled" => "Verdeckter Kartenstapel wurde neu gemischt"
+      case "delete" => "Spielstand gelöscht"
+      case "couldNotDelete" => "Spielstand konnte nicht gelöscht werden"
       case "idle" => controllerEventString
     controllerEventString
 

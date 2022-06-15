@@ -13,6 +13,11 @@ object dependencies {
     val akkaActor = ("com.typesafe.akka" %% "akka-actor" % versionNumber.akkaVersion).cross(CrossVersion.for3Use2_13)
     val akkaHttp = ("com.typesafe.akka" %% "akka-http" % versionNumber.akkaHttpVersion).cross(CrossVersion.for3Use2_13)
     val slf4jNop = "org.slf4j" % "slf4j-nop" % versionNumber.slf4jNop
+    val slick = ("com.typesafe.slick" %% "slick" % versionNumber.slick).cross(CrossVersion.for3Use2_13)
+    val slickHikaricp = ("com.typesafe.slick" %% "slick-hikaricp" % versionNumber.slickHikaricp).cross(CrossVersion.for3Use2_13)
+    val mysql = "mysql" % "mysql-connector-java" % versionNumber.mysql
+    val githubSlick = "com.github.slick.slick" % "slick_3" % versionNumber.githubSlick
+    val mongoDb = ("org.mongodb.scala" %% "mongo-scala-driver" % versionNumber.mongoDb).cross(CrossVersion.for3Use2_13)
 }
 
 object versionNumber {
@@ -25,4 +30,9 @@ object versionNumber {
     val akkaVersion = "2.6.19"
     val akkaHttpVersion = "10.2.9"
     val slf4jNop = "2.0.0-alpha7"
+    val slick = "3.3.3"
+    val slickHikaricp = "3.3.3"
+    val mysql = "8.0.29"
+    val githubSlick = "nafg~dottyquery-SNAPSHOT"
+    val mongoDb = "4.6.0"
 }

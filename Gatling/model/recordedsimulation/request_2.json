@@ -1,0 +1,19 @@
+{
+  "cardString":"B 1",
+  "cardColor":0,
+  "game": {
+    "game": {
+      "numOfPlayers":2,
+      "activePlayer":0,
+      "direction":true,
+      "anotherPull":false,
+      "specialCard":0,
+      "enemy1Cards":["B 8","B 5","R 7","Y 2","R 6","B S","G+2"],
+      "enemy2Cards":[],
+      "enemy3Cards":[],
+      "openCardStack":["B 6"],
+      "playerCards":["B 1","R 8","R 1","Y 9","Y 3","Y 6","Y 4"],
+      "coveredCardStack":["G S","Y 2","Y 3","S+4","S C","B 3","G 4","G 3","Y 8","R 6","G D","G 9","R 0","R 9","S+4","G 2","B+2","R 1","R 4","Y S","Y 1","G 6","Y 6","R D","Y 7","Y+2","Y 8","S C","G 1","B 0","R 2","G 8","B 1","R 8","G+2","B S","R 5","Y+2","Y 5","R 7","Y 7","Y D","G 7","R S","B 4","R+2","G S","B 3","Y 9","Y 4","S C","B 6","B 9","R D","G 1","G 2","G 4","R 2","R 5","B 2","B 4","Y S","B D","B 8","R 3","B+2","B 7","Y 1","R 4","G 3","B 7","R 3","Y 0","S+4","G 8","G 5","R S","B D","G 0","Y D","G 6","G 9","B 5","G D","G 7","R 9","S C","S+4","B 2","R+2","Y 5","B 9","G 5"]
+    }
+  }
+}

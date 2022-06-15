@@ -103,6 +103,24 @@ case class RestService(controller: ControllerInterface):
           }
         },
         get {
+          path("load" / Remaining) { id =>
+            controller.load(id)
+            complete(HttpEntity(ContentTypes.`application/json`, controller.gameToJson()))
+          }
+        },
+        get {
+          path("delete") {
+            controller.delete()
+            complete(HttpEntity(ContentTypes.`application/json`, controller.gameToJson()))
+          }
+        },
+        get {
+          path("delete" / Remaining) { id =>
+            controller.delete(id)
+            complete(HttpEntity(ContentTypes.`application/json`, controller.gameToJson()))
+          }
+        },
+        get {
           path("do-step") {
             if controller.nextTurn() then
               complete(HttpEntity(ContentTypes.`application/json`, controller.gameToJson()))

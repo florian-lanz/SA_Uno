@@ -10,7 +10,8 @@ trait ControllerInterface extends Publisher:
   def undo(): Unit
   def redo(): Unit
   def save(): Unit
-  def load(): Unit
+  def load(id: String = "0"): Unit
+  def delete(id: String = "0"): Unit
   def won(): Unit
   def getCardText(list : Int, index : Int) : String
   def getGuiCardText(list : Int, index : Int) : String
