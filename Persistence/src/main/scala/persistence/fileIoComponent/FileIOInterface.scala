@@ -1,4 +1,4 @@
-package fileIoComponent
+package persistence.fileIoComponent
 
 import play.api.libs.json.JsValue
 import scala.util.Try

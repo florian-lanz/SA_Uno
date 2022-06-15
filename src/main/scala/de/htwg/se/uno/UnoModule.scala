@@ -3,7 +3,7 @@ package de.htwg.se.uno
 import com.google.inject.AbstractModule
 import com.google.inject.name.Names
 import de.htwg.se.uno.controller.controllerComponent._
-import fileIoComponent._
+//import fileIoComponent._
 
 class UnoModule extends AbstractModule:
   val defaultPlayers: Int = 2
@@ -18,5 +18,5 @@ class UnoModule extends AbstractModule:
 
 //    bind(classOf[ControllerInterface]).to(classOf[controllerBaseImpl.Controller])
 
-    //bind(classOf[FileIOInterface]).to(classOf[fileIoJsonImpl.FileIO])
-    //bind(classOf[FileIOInterface]).to(classOf[fileIoXmlImpl.FileIO])
+//    bind(classOf[FileIOInterface]).to(classOf[fileIoJsonImpl.FileIO])
+//    bind(classOf[FileIOInterface]).to(classOf[fileIoXmlImpl.FileIO])

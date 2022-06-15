@@ -1,10 +1,10 @@
-package fileIoComponent.fileIoXmlImpl
+package persistence.fileIoComponent.fileIoXmlImpl
 
 import com.google.inject.{Guice, Key}
 import com.google.inject.name.Names
 
 import scala.io.Source
-import fileIoComponent.FileIOInterface
+import persistence.fileIoComponent.FileIOInterface
 import play.api.libs.json.{JsValue, Json}
 
 import scala.annotation.tailrec
